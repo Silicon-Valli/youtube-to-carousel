@@ -653,17 +653,17 @@ body {
     </nav>
 
     <div class="hero">
-      <div class="hero-badge">⚡ YouTube → LinkedIn</div>
-      <h1 class="hero-title">Turn any video into a<br><em>carousel that gets saved</em></h1>
-      <p class="hero-sub">Paste your transcript. Claude writes the slides, you export to LinkedIn in one tap. Free — no account needed.</p>
+      <div class="hero-badge">⚡ Any text → LinkedIn carousel</div>
+      <h1 class="hero-title">Turn any idea into a<br><em>carousel that gets saved</em></h1>
+      <p class="hero-sub">Paste anything — a YouTube transcript, news article, meeting notes, raw thoughts. Claude turns it into LinkedIn slides. Free, no account needed.</p>
     </div>
 
     <div class="form-card anim">
-      <label class="field-label" for="manualTxt">Paste your transcript</label>
+      <label class="field-label" for="manualTxt">Paste your content</label>
       <p class="manual-tip" style="margin-bottom:10px">
-        On YouTube: click <strong>⋯</strong> below the player → <strong>Show transcript</strong> → select all → copy → paste here.
+        Works with <strong>YouTube transcripts</strong>, <strong>news articles</strong>, <strong>meeting notes</strong>, <strong>raw ideas</strong> — anything with substance. The more text, the better the slides.
       </p>
-      <textarea id="manualTxt" placeholder="Paste the full transcript text here..." style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;padding:11px 13px;resize:vertical;min-height:130px;outline:none;font-family:var(--font);transition:border-color 0.18s;-webkit-appearance:none;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+      <textarea id="manualTxt" placeholder="Paste a YouTube transcript, article, meeting notes, or raw thoughts..." style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;padding:11px 13px;resize:vertical;min-height:130px;outline:none;font-family:var(--font);transition:border-color 0.18s;-webkit-appearance:none;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"></textarea>
 
       <div class="error-box" id="errorBox" style="margin-top:10px"></div>
 
@@ -677,20 +677,20 @@ body {
     <!-- Loading -->
     <div class="loading-screen" id="loadingScreen">
       <div class="spinner"></div>
-      <p class="loading-text" id="loadingText">Fetching transcript...</p>
+      <p class="loading-text" id="loadingText">Reading your content...</p>
     </div>
 
     <!-- Example section -->
     <section class="example-section">
       <p class="section-eyebrow">See how it works</p>
-      <h2 class="section-title">Transcript in → carousel out</h2>
-      <p class="section-sub">Copy the transcript from any YouTube video. Paste it here. Get LinkedIn slides in seconds.</p>
+      <h2 class="section-title">Any text → carousel out</h2>
+      <p class="section-sub">YouTube transcript, news article, meeting notes, raw thoughts. Paste it in, get slides out.</p>
 
       <div class="demo-flow">
 
         <!-- Left: Input mockup -->
         <div class="demo-input-side">
-          <span class="demo-step-label">1 — Copy the transcript</span>
+          <span class="demo-step-label">1 — Paste any text</span>
           <div class="yt-preview-card" style="max-width:340px;width:100%">
             <div class="yt-thumb-wrap">
               <img
