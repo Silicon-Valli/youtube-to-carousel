@@ -450,7 +450,7 @@ body {
 .card-thumb-layer img {
   width: 100%; height: 100%;
   object-fit: cover;
-  opacity: 0.15;
+  opacity: 1;
   display: block;
 }
 
@@ -807,8 +807,44 @@ body {
 }
 .edit-bg-preview.visible { display: block; }
 
-/* Higher opacity for user-uploaded images */
-.card-thumb-layer.has-custom img { opacity: 0.28; }
+/* Custom images always show at full opacity (overlay controls visibility) */
+.card-thumb-layer.has-custom img { opacity: 1; }
+
+.edit-overlay-label {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 0.8px; text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 14px;
+  margin-bottom: 8px;
+}
+.edit-overlay-label span { font-weight: 400; text-transform: none; letter-spacing: 0; opacity: 0.7; }
+.overlay-slider {
+  width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border-hover);
+  outline: none;
+  cursor: pointer;
+}
+.overlay-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  border: 2px solid #fff;
+}
+.overlay-slider::-moz-range-thumb {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  border: 2px solid #fff;
+}
 
 .btn-edit-toggle {
   flex: 1;
@@ -1004,6 +1040,9 @@ body {
         <button class="btn-remove-bg" id="btnRemoveBg" onclick="removeBgImage()">✕ Remove</button>
       </div>
       <input type="file" id="bgFileInput" accept="image/*" style="display:none" onchange="handleBgUpload(this)" />
+
+      <div class="edit-overlay-label">Color overlay <span id="overlayPct">80%</span></div>
+      <input type="range" class="overlay-slider" id="overlaySlider" min="0" max="100" value="80" oninput="updateOverlay(this.value)" />
     </div>
 
     <div class="slide-list-section">
@@ -1347,11 +1386,15 @@ function renderCard(cardEl, slideData, i, videoId) {
   const tag = tagLabel(i, total);
   const gradIdx = s.gradientIdx !== undefined ? s.gradientIdx : i % GRADIENTS.length;
 
-  cardEl.style.background = GRADIENTS[gradIdx];
+  // Base card color = first gradient stop (for when image hasn't loaded)
+  cardEl.style.background = GRADIENT_PAIRS[gradIdx][0];
   const bgSrc = s.customBg || esc(photo);
   const thumbClass = s.customBg ? 'card-thumb-layer has-custom' : 'card-thumb-layer';
+  // overlay opacity: 0 = gradient fully transparent (image shows through), 1 = fully opaque
+  const overlayVal = s.overlayOpacity !== undefined ? s.overlayOpacity : 0.80;
   cardEl.innerHTML = `
     <div class="${thumbClass}"><img src="${bgSrc}" alt="" loading="lazy" onerror="this.style.opacity='0'" /></div>
+    <div style="position:absolute;inset:0;z-index:0;pointer-events:none;background:${GRADIENTS[gradIdx]};opacity:${overlayVal}"></div>
     <div class="card-content-layer">
       <div class="card-top">
         <span class="slide-counter">${i + 1} / ${total}</span>
@@ -1577,20 +1620,20 @@ async function renderSlideToCanvas(slide, i, total, thumbImg) {
     bgAlpha = 0.28;
   }
 
-  // Texture layer
+  // Texture layer — draw image at full size, then gradient overlay on top
   if (bgImg) {
     ctx.save();
-    ctx.globalAlpha = bgAlpha;
-    // cover-fit
+    ctx.globalAlpha = 1;
     const ar = bgImg.width / bgImg.height;
     let dx, dy, dw, dh;
     if (ar > 1) { dh = S; dw = S * ar; dx = -(dw-S)/2; dy = 0; }
     else { dw = S; dh = S / ar; dx = 0; dy = -(dh-S)/2; }
     ctx.drawImage(bgImg, dx, dy, dw, dh);
     ctx.restore();
-    // Re-apply gradient on top with partial opacity
+    // Re-apply gradient on top using per-slide overlay opacity
+    const overlayOpacity = slide.overlayOpacity !== undefined ? slide.overlayOpacity : 0.80;
     ctx.save();
-    ctx.globalAlpha = 0.82;
+    ctx.globalAlpha = overlayOpacity;
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, S, S);
     ctx.restore();
@@ -1801,6 +1844,11 @@ function populateEditPanel() {
   }
   // Reset file input so same file can be re-selected
   document.getElementById('bgFileInput').value = '';
+  // Sync overlay slider
+  const overlayVal = s.overlayOpacity !== undefined ? s.overlayOpacity : 0.80;
+  const pct = Math.round(overlayVal * 100);
+  document.getElementById('overlaySlider').value = pct;
+  document.getElementById('overlayPct').textContent = pct + '%';
 }
 
 function toggleEditPanel() {
@@ -1846,6 +1894,13 @@ function removeBgImage() {
   delete slides[idx].customBg;
   syncUI();
   populateEditPanel();
+}
+
+function updateOverlay(value) {
+  if (!slides[idx]) return;
+  slides[idx].overlayOpacity = parseFloat((value / 100).toFixed(2));
+  document.getElementById('overlayPct').textContent = value + '%';
+  syncUI();
 }
 
 // ══════════════════════════════════════════════════════
