@@ -690,6 +690,92 @@ body {
 }
 .anim { animation: slideUp 0.35s ease both; }
 
+/* ── EDIT PANEL ── */
+.edit-panel {
+  display: none;
+  width: 100%; max-width: 480px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px;
+  margin-top: 14px;
+  animation: slideUp 0.2s ease both;
+}
+.edit-panel.open { display: block; }
+
+.edit-panel-title {
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--dim);
+  margin-bottom: 14px;
+}
+.edit-field { margin-bottom: 12px; }
+.edit-field label {
+  display: block;
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 0.8px; text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 5px;
+}
+.edit-field input,
+.edit-field textarea {
+  width: 100%;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 14px;
+  padding: 10px 12px;
+  outline: none;
+  font-family: var(--font);
+  resize: vertical;
+  transition: border-color 0.15s;
+  -webkit-appearance: none;
+}
+.edit-field input:focus,
+.edit-field textarea:focus { border-color: var(--accent); }
+.edit-field textarea { min-height: 72px; line-height: 1.55; }
+
+.edit-colors-label {
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 0.8px; text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.edit-swatches {
+  display: flex; gap: 8px; flex-wrap: wrap;
+}
+.swatch {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: transform 0.12s, border-color 0.12s;
+  flex-shrink: 0;
+}
+.swatch:hover { transform: scale(1.12); }
+.swatch.active { border-color: #fff; }
+
+.btn-edit-toggle {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 11px 10px;
+  font-size: 13px; font-weight: 500;
+  font-family: var(--font);
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  transition: all 0.15s;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  min-height: 44px;
+}
+.btn-edit-toggle:hover { color: var(--text); border-color: var(--border-hover); background: var(--surface2); }
+.btn-edit-toggle.active { color: var(--accent); border-color: var(--accent); background: var(--accent-bg); }
+
 /* ── PROGRESS BAR (export) ── */
 .export-progress {
   display: none;
@@ -832,6 +918,30 @@ body {
 
     <div class="slide-actions">
       <button class="btn-sm" id="copySlideBtn" onclick="copyCurrentSlide()">📋 Copy slide</button>
+      <button class="btn-edit-toggle" id="editToggleBtn" onclick="toggleEditPanel()">✏️ Edit slide</button>
+    </div>
+
+    <!-- Edit panel -->
+    <div class="edit-panel" id="editPanel">
+      <div class="edit-panel-title">Edit this slide</div>
+
+      <div class="edit-field">
+        <label for="editHeadline">Headline</label>
+        <input id="editHeadline" type="text" oninput="updateField('headline', this.value)" />
+      </div>
+
+      <div class="edit-field">
+        <label for="editBody">Body</label>
+        <textarea id="editBody" oninput="updateField('body', this.value)"></textarea>
+      </div>
+
+      <div class="edit-field">
+        <label for="editStat">Stat / callout <span style="opacity:0.5;font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
+        <input id="editStat" type="text" placeholder="Leave blank to remove" oninput="updateField('stat', this.value)" />
+      </div>
+
+      <div class="edit-colors-label">Background color</div>
+      <div class="edit-swatches" id="swatchRow"></div>
     </div>
 
     <div class="slide-list-section">
@@ -1173,8 +1283,9 @@ function renderCard(cardEl, slideData, i, videoId) {
   const total = slideData.length;
   const photo = slidePhotoUrl(s, i);
   const tag = tagLabel(i, total);
+  const gradIdx = s.gradientIdx !== undefined ? s.gradientIdx : i % GRADIENTS.length;
 
-  cardEl.style.background = GRADIENTS[i % GRADIENTS.length];
+  cardEl.style.background = GRADIENTS[gradIdx];
   cardEl.innerHTML = `
     <div class="card-thumb-layer"><img src="${esc(photo)}" alt="" loading="lazy" onerror="this.style.opacity='0'" /></div>
     <div class="card-content-layer">
@@ -1211,6 +1322,8 @@ function syncUI() {
   document.getElementById('nextBtn').disabled = idx === total - 1;
   document.querySelectorAll('#dotsRow .dot').forEach((d, i) => d.classList.toggle('on', i === idx));
   document.querySelectorAll('#slideList .slide-row').forEach((r, i) => r.classList.toggle('on', i === idx));
+  // Keep edit panel in sync when navigating
+  if (document.getElementById('editPanel')?.classList.contains('open')) populateEditPanel();
 }
 
 function buildSlideList() {
@@ -1237,6 +1350,10 @@ function showResults(data) {
   document.getElementById('resultsTitle').textContent = data.title || 'Your carousel';
   buildDots('dotsRow', slides.length);
   buildSlideList();
+  buildSwatches();
+  // Close edit panel between generations
+  document.getElementById('editPanel')?.classList.remove('open');
+  document.getElementById('editToggleBtn')?.classList.remove('active');
   syncUI();
   document.getElementById('landing-page').style.display = 'none';
   document.getElementById('results-page').style.display = 'block';
@@ -1557,6 +1674,67 @@ async function exportPNG() {
     btn.disabled = false;
     if (btn.innerHTML === '⏳ Rendering...') btn.innerHTML = orig;
   }
+}
+
+// ══════════════════════════════════════════════════════
+// EDIT PANEL
+// ══════════════════════════════════════════════════════
+
+function buildSwatches() {
+  const row = document.getElementById('swatchRow');
+  if (!row) return;
+  row.innerHTML = '';
+  GRADIENT_PAIRS.forEach(([c1, c2], i) => {
+    const sw = document.createElement('button');
+    sw.className = 'swatch';
+    sw.style.background = `linear-gradient(140deg,${c1},${c2})`;
+    sw.title = `Color ${i + 1}`;
+    sw.onclick = () => setSlideGradient(i);
+    sw.setAttribute('aria-label', `Color option ${i + 1}`);
+    row.appendChild(sw);
+  });
+}
+
+function syncSwatches() {
+  const s = slides[idx];
+  const active = s.gradientIdx !== undefined ? s.gradientIdx : idx % GRADIENTS.length;
+  document.querySelectorAll('#swatchRow .swatch').forEach((sw, i) => {
+    sw.classList.toggle('active', i === active);
+  });
+}
+
+function populateEditPanel() {
+  const s = slides[idx];
+  document.getElementById('editHeadline').value = s.headline || '';
+  document.getElementById('editBody').value = s.body || '';
+  document.getElementById('editStat').value = s.stat || '';
+  syncSwatches();
+}
+
+function toggleEditPanel() {
+  const panel = document.getElementById('editPanel');
+  const btn = document.getElementById('editToggleBtn');
+  const isOpen = panel.classList.toggle('open');
+  btn.classList.toggle('active', isOpen);
+  if (isOpen) populateEditPanel();
+}
+
+function updateField(field, value) {
+  if (!slides[idx]) return;
+  if (field === 'stat') {
+    slides[idx].stat = value.trim() || null;
+  } else {
+    slides[idx][field] = value;
+  }
+  syncUI();
+  // keep cursor in correct field after re-render doesn't move focus
+}
+
+function setSlideGradient(gradIdx) {
+  if (!slides[idx]) return;
+  slides[idx].gradientIdx = gradIdx;
+  syncUI();
+  syncSwatches();
 }
 
 // ══════════════════════════════════════════════════════
