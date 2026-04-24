@@ -1,4 +1,4 @@
-// Vercel serverless function — YouTube transcript fetcher
+// Vercel serverless function — YouTube transcript fetcher (v2)
 // Strategy 1: youtube-transcript npm package (battle-tested)
 // Strategy 2: Page scrape with raw caption URL (no fmt modification)
 // Strategy 3: WEB Innertube with visitorData
