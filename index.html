@@ -1090,11 +1090,9 @@ function renderCard(cardEl, slideData, i, videoId) {
   const s = slideData[i];
   const total = slideData.length;
   const photo = slidePhotoUrl(s, i);
+  const tag = tagLabel(i, total);
 
   cardEl.style.background = GRADIENTS[i % GRADIENTS.length];
-
-  const tag = tagLabel(i, total);
-  const photo = slidePhotoUrl(s, i);
   cardEl.innerHTML = `
     <div class="card-thumb-layer"><img src="${esc(photo)}" alt="" loading="lazy" onerror="this.style.opacity='0'" /></div>
     <div class="card-content-layer">
