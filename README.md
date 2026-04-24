@@ -45,7 +45,13 @@ It's this simple because it doesn't need to be anything else. There's no databas
 
 ## How to steal it
 
-### Fork and deploy
+### No terminal? One click.
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Silicon-Valli/youtube-to-carousel&env=ANTHROPIC_API_KEY&envDescription=Your%20Anthropic%20API%20key%20from%20console.anthropic.com&envLink=https://console.anthropic.com)
+
+Click the button, sign into Vercel with GitHub, paste your Anthropic API key when it asks, and you're live. Takes about 2 minutes. Get your API key at [console.anthropic.com](https://console.anthropic.com) — it's free to start.
+
+### Or do it in the terminal
 
 ```bash
 # Clone it
