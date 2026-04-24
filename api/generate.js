@@ -79,10 +79,9 @@ Rules for every slide:
 - headline: max 6 words. Specific. Could be a number, a name, a result. No vague openers.
 - body: exactly 1–2 sentences. Plain English. No jargon, no buzzwords, no phrases like "the truth is", "at the end of the day", "unlock", "dive into", "leverage", or "real people". Write it like you'd say it out loud.
 - stat: if the video mentions a specific number, percentage, study, or dollar amount — put it here as a short punchy phrase (under 12 words). Otherwise null.
-- imageQuery: 2–3 word concept for a stock photo background (e.g. "body scan machine", "tape measure waist", "athlete training track")
 
 Return only this JSON (no other text):
-{"title":"...","slides":[{"headline":"...","body":"...","stat":null,"imageQuery":"..."}]}`,
+{"title":"...","slides":[{"headline":"...","body":"...","stat":null}]}`,
         }],
       }),
     });

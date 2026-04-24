@@ -371,18 +371,8 @@ body {
 }
 .slide-card:active { cursor: grabbing; }
 
-/* Thumbnail overlay layer */
-.card-thumb-layer {
-  position: absolute; inset: 0;
-  pointer-events: none;
-  z-index: 0;
-}
-.card-thumb-layer img {
-  width: 100%; height: 100%;
-  object-fit: cover;
-  opacity: 0.13;
-  display: block;
-}
+/* Thumbnail overlay layer — hidden, gradients used instead */
+.card-thumb-layer { display: none; }
 
 /* Card content layer */
 .card-content-layer {
@@ -416,39 +406,35 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  padding: clamp(14px,3vw,22px) 0;
+  justify-content: flex-start;
+  padding: clamp(14px,3vw,22px) 0 0;
   overflow: hidden;
   min-height: 0;
 }
 .card-headline {
-  font-size: clamp(24px,5.5vw,40px);
+  font-size: clamp(20px,3.8vw,34px);
   font-weight: 800;
   line-height: 1.12;
-  letter-spacing: -0.8px;
+  letter-spacing: -0.6px;
   color: #fff;
-  text-shadow: 0 1px 8px rgba(0,0,0,0.5);
-  margin-bottom: clamp(12px,2.5vw,20px);
+  margin-bottom: clamp(10px,2vw,16px);
 }
 .card-body-text {
-  font-size: clamp(13px,2.5vw,17px);
-  line-height: 1.65;
-  color: rgba(255,255,255,0.88);
-  text-shadow: 0 1px 4px rgba(0,0,0,0.4);
+  font-size: clamp(12px,1.8vw,15px);
+  line-height: 1.6;
+  color: rgba(255,255,255,0.85);
 }
 .card-quote {
-  margin-top: clamp(12px,2.5vw,18px);
-  padding: 12px 16px;
+  margin-top: clamp(10px,2vw,14px);
+  padding: 9px 13px;
   background: rgba(255,255,255,0.14);
   border-left: 3px solid rgba(255,255,255,0.5);
   border-radius: 4px;
-  font-size: clamp(13px,2.2vw,16px);
+  font-size: clamp(11px,1.6vw,13px);
   font-weight: 700;
   font-style: normal;
   color: #fff;
-  line-height: 1.45;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.4);
-  letter-spacing: -0.2px;
+  line-height: 1.4;
 }
 
 /* ── NAVIGATION ── */
@@ -799,12 +785,12 @@ const DEMO_VIDEO_URL = `https://www.youtube.com/watch?v=${DEMO_VIDEO_ID}`;
 const DEMO_DATA = {
   title: "Most People Guess Their Body Fat Wrong",
   slides: [
-    { headline: "Most people are off by 10%", body: "Guessing your body fat in the mirror is nearly useless. People consistently underestimate it — especially in the 20-30% range where you can still look 'fine'.", stat: "Visual estimates wrong 70% of the time", imageQuery: "fitness body measurement tape" },
-    { headline: "DEXA: $40, takes 10 minutes", body: "A DEXA scan gives you exact body fat %, visceral fat level, and lean mass per limb. Most sports medicine clinics offer it. One scan beats years of guessing.", stat: null, imageQuery: "body scan medical machine" },
-    { headline: "Same weight, totally different bodies", body: "Two people at 180lbs can have 10 percentage points of body fat between them. The scale tells you almost nothing about what's actually going on.", stat: null, imageQuery: "body composition comparison" },
-    { headline: "Visceral fat is the dangerous kind", body: "The fat you can pinch isn't the problem. Visceral fat wraps around your organs — invisible, but a DEXA scan catches it before it becomes a health issue.", stat: "High visceral fat doubles cardiovascular risk", imageQuery: "heart health anatomy" },
-    { headline: "Muscle masks fat on the scale", body: "If you're building muscle and losing fat at the same time, the scale won't move. Body fat % is the only metric that shows what's actually changing.", stat: null, imageQuery: "gym weightlifting progress" },
-    { headline: "One test beats years of guessing", body: "Search 'DEXA scan near me'. Get a real baseline. Then you know exactly what to fix — instead of optimizing based on how you feel that morning.", stat: null, imageQuery: "medical clinic appointment" }
+    { headline: "You're off by 10%", body: "Most people badly underestimate their body fat — especially in the 20-30% range where you can still look 'fine'.", stat: "Visual estimates wrong 70% of the time", imageQuery: "" },
+    { headline: "DEXA scan: $40, 10 minutes", body: "You get exact body fat %, visceral fat, and lean mass per limb. One scan beats years of guessing.", stat: null, imageQuery: "" },
+    { headline: "Same weight ≠ same body", body: "Two people at 180lbs can have 10 percentage points of body fat between them. The scale lies.", stat: null, imageQuery: "" },
+    { headline: "Visceral fat is the silent one", body: "It wraps around your organs — you can't pinch it or see it, but a DEXA scan finds it early.", stat: "High visceral fat doubles heart risk", imageQuery: "" },
+    { headline: "Muscle hides fat gain", body: "Building muscle while gaining fat? The scale won't move. Body fat % is the only number that shows what's actually changing.", stat: null, imageQuery: "" },
+    { headline: "Search 'DEXA scan near me'", body: "Get one baseline reading. Then you're optimizing based on data — not how you look on a good morning.", stat: null, imageQuery: "" }
   ]
 };
 
@@ -1099,7 +1085,6 @@ function renderCard(cardEl, slideData, i, videoId) {
 
   const tag = tagLabel(i, total);
   cardEl.innerHTML = `
-    <div class="card-thumb-layer"><img src="${esc(photo)}" alt="" loading="lazy" /></div>
     <div class="card-content-layer">
       <div class="card-top">
         <span class="slide-counter">${i + 1} / ${total}</span>
@@ -1536,9 +1521,6 @@ async function exportDemoPDF() {
     card.style.background = GRADIENTS[di % GRADIENTS.length];
     const dTag = tagLabel(di, total);
     card.innerHTML = `
-      <div class="card-thumb-layer">
-        <img src="https://i.ytimg.com/vi/${DEMO_VIDEO_ID}/hqdefault.jpg" alt="" />
-      </div>
       <div class="card-content-layer">
         <div class="card-top">
           <span class="slide-counter">${di+1} / ${total}</span>
