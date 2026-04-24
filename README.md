@@ -10,19 +10,19 @@ Live: [youtubecarouselbuild.vercel.app](https://youtubecarouselbuild.vercel.app)
 
 You have a YouTube transcript, a meeting summary, a news article, or just raw thoughts in your notes app. You want a LinkedIn carousel. The gap between those two things is usually 45 minutes of copy-pasting, reformatting, and fiddling in Canva.
 
-ReelSlide closes that gap. Paste your text in, hit generate, and Claude turns it into 5-6 slides: a hook, a few content slides, and a takeaway. Each slide gets a headline, body copy, and an optional stat callout. The whole thing takes about 10 seconds.
+ReelSlide closes that gap. Paste your text in, hit generate, and Claude turns it into 6-8 slides: a hook, a few content slides, and a takeaway. Each slide gets a headline, body copy, and an optional stat callout. The whole thing takes about 10 seconds.
 
-Once the slides are out, you can edit any slide inline, swap the gradient color, upload a custom background image, and control how much of the image shows through. Then export as a PDF you can upload directly to LinkedIn as a native carousel, or grab individual PNGs.
+Once the slides are out, you can edit any slide inline, swap between four curated gradient presets, upload a custom background image, and control how much of the image shows through. Then export as a PDF you can upload directly to LinkedIn as a native carousel, or grab individual PNGs.
 
 ---
 
 ## How it works
 
 1. Paste any text into the input field (YouTube transcript, article, meeting notes, brain dump)
-2. Hit "Generate carousel" — Claude processes it server-side and returns 5-6 structured slides
+2. Hit "Generate carousel" — Claude processes it server-side and returns 6-8 structured slides
 3. Flip through the slides in the card preview
 4. Click "Edit slide" on any slide to tweak the headline, body, or stat
-5. Pick a gradient color from the 8 swatches, or upload your own background image
+5. Pick one of the four gradient presets (Graphite, Midnight, Oxblood, Pine), or upload your own background image
 6. Use the overlay slider to control how much the image shows through vs the color
 7. Export as PDF (uploads directly to LinkedIn) or PNG (single slide)
 
@@ -71,7 +71,7 @@ That's the whole setup. Vercel detects the `api/` folder automatically and deplo
 
 If you want to understand what actually makes it work, there are three functions worth reading:
 
-**`generate.js`** is the brain. It takes raw text, sends it to `claude-sonnet-4-6` with a prompt that asks for 5-6 slides in a specific JSON shape (headline, body, stat, imageQuery), and returns that JSON. The prompt does most of the heavy lifting: it tells Claude to write like a person explaining something over coffee, to lead with numbers when they exist, and to keep headlines under 6 words.
+**`generate.js`** is the brain. It takes raw text, sends it to `claude-sonnet-4-6` with a prompt that asks for 6-8 slides in a specific JSON shape (headline, body, stat, imageQuery), and returns that JSON. The prompt does most of the heavy lifting: it tells Claude to write like a person explaining something over coffee, to lead with numbers when they exist, and to keep headlines under 6 words.
 
 **`renderCard()`** is what turns a slide object into something you can see. It reads the gradient index, checks for a custom background image, calculates an overlay opacity, and builds the card HTML. Every visual tweak you make in the edit panel flows back through here.
 
@@ -83,8 +83,8 @@ If you want to understand what actually makes it work, there are three functions
 
 - Rate limited to 5 generations per IP per day (Claude API costs money)
 - Picsum background images are random seeds, not semantic search. The "swimming" slide might get a photo of a boat
-- Canvas text rendering uses Arial fallback, not the same font as the screen preview, so exports look slightly different
-- PDF export can be slow on long carousels (6 slides = 6 canvas renders)
+- Canvas export uses the same Fraunces/Inter/JetBrains Mono stack as the screen, but if the webfonts haven't loaded yet by export time it falls back to system serif/sans
+- PDF export can be slow on long carousels (8 slides = 8 canvas renders)
 - No way to reorder slides
 - No account system, so edits are lost on refresh
 - Mobile works for viewing but editing is awkward on small screens
@@ -105,3 +105,42 @@ If you want to understand what actually makes it work, there are three functions
 ## Vibe coded with Claude
 
 This was built in a single day as part of a one-app-per-day portfolio project. The architecture decisions were made for speed, not scale: one HTML file means one thing to deploy and one thing to debug. The actual hard part wasn't the Claude integration or the UI. It was the PDF export. Getting canvas rendering to match what you see on screen involves loading images with CORS proxies, manually implementing word wrap, recalculating font sizes, and carefully applying layered opacity in the right order. That function got rewritten three times. Everything else came together fast.
+
+---
+
+## How to write a README like this one
+
+Copy the prompt below and paste it to Claude along with a short description of your project. It will generate a README in the same style.
+
+<details>
+<summary>Show prompt</summary>
+
+```
+Write a README.md for this project using everything you know about it from our conversation — the name, live URL, stack, core functions, limitations, and how it was built.
+
+Follow this structure:
+1. Title with emoji, bold one-liner, live demo link right at the top
+2. "What it does" — the problem and solution from the user's perspective, no bullets, 2-3 short paragraphs
+3. "How it works" — numbered steps showing the user flow as someone would actually experience it
+4. "The stack" — file/folder tree as a code block, then explain why it's this simple
+5. "How to steal it" — two sections: (a) a Deploy to Vercel button if applicable, (b) rebuild from scratch focusing on the 2-3 core functions that do the real work, with function names bolded
+6. "Known limitations" — blunt bullets, no hedging
+7. "What v2 could look like" — short bullet list of obvious next features
+8. "Vibe coded with Claude" — one paragraph on how it was built and what the actual hard part was
+
+Tone:
+- Explain it like a smart friend, not enterprise documentation
+- Short sentences, varied length
+- No words like: pivotal, crucial, seamless, robust, powerful, leverage, utilize
+- No em dashes
+- "How to steal it" should sound genuinely inviting
+- Limitations should be blunt — name the real constraints
+
+Format:
+- --- as section dividers
+- Code blocks for terminal commands and file trees
+- No headers beyond H2
+- Save to the project folder
+```
+
+</details>
