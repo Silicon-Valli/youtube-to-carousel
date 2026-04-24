@@ -371,8 +371,18 @@ body {
 }
 .slide-card:active { cursor: grabbing; }
 
-/* Thumbnail overlay layer — hidden, gradients used instead */
-.card-thumb-layer { display: none; }
+/* Thumbnail overlay layer */
+.card-thumb-layer {
+  position: absolute; inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+.card-thumb-layer img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  opacity: 0.15;
+  display: block;
+}
 
 /* Card content layer */
 .card-content-layer {
@@ -785,12 +795,12 @@ const DEMO_VIDEO_URL = `https://www.youtube.com/watch?v=${DEMO_VIDEO_ID}`;
 const DEMO_DATA = {
   title: "Most People Guess Their Body Fat Wrong",
   slides: [
-    { headline: "You're off by 10%", body: "Most people badly underestimate their body fat — especially in the 20-30% range where you can still look 'fine'.", stat: "Visual estimates wrong 70% of the time", imageQuery: "" },
-    { headline: "DEXA scan: $40, 10 minutes", body: "You get exact body fat %, visceral fat, and lean mass per limb. One scan beats years of guessing.", stat: null, imageQuery: "" },
-    { headline: "Same weight ≠ same body", body: "Two people at 180lbs can have 10 percentage points of body fat between them. The scale lies.", stat: null, imageQuery: "" },
-    { headline: "Visceral fat is the silent one", body: "It wraps around your organs — you can't pinch it or see it, but a DEXA scan finds it early.", stat: "High visceral fat doubles heart risk", imageQuery: "" },
-    { headline: "Muscle hides fat gain", body: "Building muscle while gaining fat? The scale won't move. Body fat % is the only number that shows what's actually changing.", stat: null, imageQuery: "" },
-    { headline: "Search 'DEXA scan near me'", body: "Get one baseline reading. Then you're optimizing based on data — not how you look on a good morning.", stat: null, imageQuery: "" }
+    { headline: "You're off by 10%", body: "Most people badly underestimate their body fat — especially in the 20-30% range where you can still look 'fine'.", stat: "Visual estimates wrong 70% of the time", imageQuery: "mirror reflection body fitness" },
+    { headline: "DEXA scan: $40, 10 minutes", body: "You get exact body fat %, visceral fat, and lean mass per limb. One scan beats years of guessing.", stat: null, imageQuery: "medical scanner hospital machine" },
+    { headline: "Same weight ≠ same body", body: "Two people at 180lbs can have 10 percentage points of body fat between them. The scale lies.", stat: null, imageQuery: "weighing scale bathroom" },
+    { headline: "Visceral fat is the silent one", body: "It wraps around your organs — you can't pinch it or see it, but a DEXA scan finds it early.", stat: "High visceral fat doubles heart risk", imageQuery: "heart anatomy organ red" },
+    { headline: "Muscle hides fat gain", body: "Building muscle while gaining fat? The scale won't move. Body fat % is the only number that shows what's actually changing.", stat: null, imageQuery: "gym weights barbell training" },
+    { headline: "Search 'DEXA scan near me'", body: "Get one baseline reading. Then you're optimizing based on data — not how you look on a good morning.", stat: null, imageQuery: "clinic appointment doctor health" }
   ]
 };
 
@@ -1071,9 +1081,9 @@ async function handleGenerate() {
 // ══════════════════════════════════════════════════════
 
 function slidePhotoUrl(s, i) {
-  // Use imageQuery from Claude if present, otherwise fall back to headline
-  const seed = encodeURIComponent((s.imageQuery || s.headline || `slide${i}`).toLowerCase().replace(/\s+/g, '-'));
-  return `https://picsum.photos/seed/${seed}/800/800`;
+  const query = encodeURIComponent((s.imageQuery || s.headline || 'abstract background').toLowerCase());
+  // sig param makes each slide consistent across renders; Unsplash does actual keyword matching
+  return `https://source.unsplash.com/800x800/?${query}&sig=${i}`;
 }
 
 function renderCard(cardEl, slideData, i, videoId) {
@@ -1084,7 +1094,9 @@ function renderCard(cardEl, slideData, i, videoId) {
   cardEl.style.background = GRADIENTS[i % GRADIENTS.length];
 
   const tag = tagLabel(i, total);
+  const photo = slidePhotoUrl(s, i);
   cardEl.innerHTML = `
+    <div class="card-thumb-layer"><img src="${esc(photo)}" alt="" loading="lazy" onerror="this.style.opacity='0'" /></div>
     <div class="card-content-layer">
       <div class="card-top">
         <span class="slide-counter">${i + 1} / ${total}</span>
@@ -1520,7 +1532,9 @@ async function exportDemoPDF() {
     card.className = 'slide-card';
     card.style.background = GRADIENTS[di % GRADIENTS.length];
     const dTag = tagLabel(di, total);
+    const dPhoto = slidePhotoUrl(s, di);
     card.innerHTML = `
+      <div class="card-thumb-layer"><img src="${esc(dPhoto)}" alt="" loading="lazy" onerror="this.style.opacity='0'" /></div>
       <div class="card-content-layer">
         <div class="card-top">
           <span class="slide-counter">${di+1} / ${total}</span>
