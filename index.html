@@ -756,6 +756,60 @@ body {
 .swatch:hover { transform: scale(1.12); }
 .swatch.active { border-color: #fff; }
 
+.edit-bg-label {
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 0.8px; text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 14px;
+  margin-bottom: 8px;
+}
+.edit-bg-row {
+  display: flex; gap: 8px; align-items: center;
+}
+.btn-upload-bg {
+  background: rgba(255,255,255,0.06);
+  border: 1px dashed var(--border-hover);
+  border-radius: 8px;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 9px 14px;
+  font-size: 13px; font-weight: 500;
+  font-family: var(--font);
+  display: inline-flex; align-items: center; gap: 6px;
+  transition: all 0.15s;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn-upload-bg:hover { border-color: var(--accent); color: var(--text); background: var(--accent-bg); }
+.btn-remove-bg {
+  display: none;
+  background: rgba(255,70,70,0.1);
+  border: 1px solid rgba(255,70,70,0.25);
+  border-radius: 8px;
+  color: #ff8a8a;
+  cursor: pointer;
+  padding: 9px 12px;
+  font-size: 13px;
+  font-family: var(--font);
+  transition: all 0.15s;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn-remove-bg:hover { background: rgba(255,70,70,0.2); }
+.btn-remove-bg.visible { display: inline-flex; align-items: center; gap: 5px; }
+.edit-bg-preview {
+  display: none;
+  width: 40px; height: 40px;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.edit-bg-preview.visible { display: block; }
+
+/* Higher opacity for user-uploaded images */
+.card-thumb-layer.has-custom img { opacity: 0.28; }
+
 .btn-edit-toggle {
   flex: 1;
   background: var(--surface);
@@ -942,6 +996,14 @@ body {
 
       <div class="edit-colors-label">Background color</div>
       <div class="edit-swatches" id="swatchRow"></div>
+
+      <div class="edit-bg-label">Background image</div>
+      <div class="edit-bg-row">
+        <img class="edit-bg-preview" id="bgPreview" src="" alt="" />
+        <button class="btn-upload-bg" onclick="document.getElementById('bgFileInput').click()">🖼 Upload image</button>
+        <button class="btn-remove-bg" id="btnRemoveBg" onclick="removeBgImage()">✕ Remove</button>
+      </div>
+      <input type="file" id="bgFileInput" accept="image/*" style="display:none" onchange="handleBgUpload(this)" />
     </div>
 
     <div class="slide-list-section">
@@ -1286,8 +1348,10 @@ function renderCard(cardEl, slideData, i, videoId) {
   const gradIdx = s.gradientIdx !== undefined ? s.gradientIdx : i % GRADIENTS.length;
 
   cardEl.style.background = GRADIENTS[gradIdx];
+  const bgSrc = s.customBg || esc(photo);
+  const thumbClass = s.customBg ? 'card-thumb-layer has-custom' : 'card-thumb-layer';
   cardEl.innerHTML = `
-    <div class="card-thumb-layer"><img src="${esc(photo)}" alt="" loading="lazy" onerror="this.style.opacity='0'" /></div>
+    <div class="${thumbClass}"><img src="${bgSrc}" alt="" loading="lazy" onerror="this.style.opacity='0'" /></div>
     <div class="card-content-layer">
       <div class="card-top">
         <span class="slide-counter">${i + 1} / ${total}</span>
@@ -1492,23 +1556,37 @@ async function renderSlideToCanvas(slide, i, total, thumbImg) {
   canvas.width = S; canvas.height = S;
   const ctx = canvas.getContext('2d');
 
-  // Gradient background
-  const [c1, c2] = GRADIENT_PAIRS[i % GRADIENT_PAIRS.length];
+  // Gradient background — respect per-slide override
+  const gradIdx = slide.gradientIdx !== undefined ? slide.gradientIdx : i % GRADIENT_PAIRS.length;
+  const [c1, c2] = GRADIENT_PAIRS[gradIdx];
   const grad = ctx.createLinearGradient(0, 0, S * 0.7, S);
   grad.addColorStop(0, c1); grad.addColorStop(1, c2);
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, S, S);
 
-  // Thumbnail texture layer
-  if (thumbImg) {
+  // If slide has a custom user-uploaded bg, use that instead of thumbImg
+  let bgImg = thumbImg;
+  let bgAlpha = 0.09;
+  if (slide.customBg) {
+    bgImg = await new Promise(resolve => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => resolve(null);
+      img.src = slide.customBg;
+    });
+    bgAlpha = 0.28;
+  }
+
+  // Texture layer
+  if (bgImg) {
     ctx.save();
-    ctx.globalAlpha = 0.09;
+    ctx.globalAlpha = bgAlpha;
     // cover-fit
-    const ar = thumbImg.width / thumbImg.height;
+    const ar = bgImg.width / bgImg.height;
     let dx, dy, dw, dh;
     if (ar > 1) { dh = S; dw = S * ar; dx = -(dw-S)/2; dy = 0; }
     else { dw = S; dh = S / ar; dx = 0; dy = -(dh-S)/2; }
-    ctx.drawImage(thumbImg, dx, dy, dw, dh);
+    ctx.drawImage(bgImg, dx, dy, dw, dh);
     ctx.restore();
     // Re-apply gradient on top with partial opacity
     ctx.save();
@@ -1709,6 +1787,20 @@ function populateEditPanel() {
   document.getElementById('editBody').value = s.body || '';
   document.getElementById('editStat').value = s.stat || '';
   syncSwatches();
+  // Sync bg image preview
+  const preview = document.getElementById('bgPreview');
+  const removeBtn = document.getElementById('btnRemoveBg');
+  if (s.customBg) {
+    preview.src = s.customBg;
+    preview.classList.add('visible');
+    removeBtn.classList.add('visible');
+  } else {
+    preview.src = '';
+    preview.classList.remove('visible');
+    removeBtn.classList.remove('visible');
+  }
+  // Reset file input so same file can be re-selected
+  document.getElementById('bgFileInput').value = '';
 }
 
 function toggleEditPanel() {
@@ -1735,6 +1827,25 @@ function setSlideGradient(gradIdx) {
   slides[idx].gradientIdx = gradIdx;
   syncUI();
   syncSwatches();
+}
+
+function handleBgUpload(input) {
+  if (!slides[idx] || !input.files || !input.files[0]) return;
+  const file = input.files[0];
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    slides[idx].customBg = e.target.result;
+    syncUI();
+    populateEditPanel();
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeBgImage() {
+  if (!slides[idx]) return;
+  delete slides[idx].customBg;
+  syncUI();
+  populateEditPanel();
 }
 
 // ══════════════════════════════════════════════════════
