@@ -4,7 +4,7 @@
 // Strategy 3: WEB Innertube with visitorData
 // Strategy 4: Timedtext direct
 
-const { YoutubeTranscript } = require('youtube-transcript');
+let YoutubeTranscript; try { YoutubeTranscript = require('youtube-transcript').YoutubeTranscript; } catch(e) {}
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
