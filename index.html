@@ -1081,9 +1081,16 @@ async function handleGenerate() {
 // ══════════════════════════════════════════════════════
 
 function slidePhotoUrl(s, i) {
-  const query = encodeURIComponent((s.imageQuery || s.headline || 'abstract background').toLowerCase());
-  // sig param makes each slide consistent across renders; Unsplash does actual keyword matching
-  return `https://source.unsplash.com/800x800/?${query}&sig=${i}`;
+  // Convert "airplane runway takeoff" → "airplane,runway,takeoff"
+  const keywords = (s.imageQuery || s.headline || 'abstract')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, '')
+    .trim()
+    .split(/\s+/)
+    .slice(0, 3)
+    .join(',');
+  // lock param = consistent photo per slide index; LoremFlickr uses Flickr keyword search
+  return `https://loremflickr.com/800/800/${encodeURIComponent(keywords)}?lock=${i + 1}`;
 }
 
 function renderCard(cardEl, slideData, i, videoId) {
