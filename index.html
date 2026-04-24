@@ -1,1 +1,1550 @@
-TEST_CONTENT_123
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0f0f13">
+<title>ReelSlide — YouTube to LinkedIn Carousel</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0f0f13;
+  --surface: #1a1a24;
+  --surface2: #222235;
+  --accent: #6c63ff;
+  --accent-bg: rgba(108,99,255,0.12);
+  --accent-border: rgba(108,99,255,0.28);
+  --text: #f0f0f8;
+  --muted: #8080a0;
+  --dim: #454560;
+  --border: rgba(255,255,255,0.07);
+  --border-hover: rgba(255,255,255,0.16);
+  --radius: 12px;
+  --font: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* ── SHARED ── */
+.container { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+.visually-hidden { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); }
+
+/* ── HEADER ── */
+.site-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 0;
+}
+.logo {
+  display: flex; align-items: center; gap: 9px;
+  text-decoration: none; color: var(--text);
+  font-size: 17px; font-weight: 700; letter-spacing: -0.3px;
+}
+.logo-mark {
+  width: 30px; height: 30px;
+  background: var(--accent);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; line-height: 1;
+}
+
+/* ── HERO ── */
+.hero {
+  text-align: center;
+  padding: 44px 0 36px;
+}
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--accent);
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-border);
+  border-radius: 20px;
+  padding: 5px 14px;
+  margin-bottom: 20px;
+}
+.hero-title {
+  font-size: clamp(32px, 7vw, 58px);
+  font-weight: 800;
+  letter-spacing: -1.5px;
+  line-height: 1.07;
+  max-width: 700px;
+  margin: 0 auto 16px;
+}
+.hero-title em { font-style:normal; color: var(--accent); }
+.hero-sub {
+  font-size: 17px;
+  color: var(--muted);
+  max-width: 440px;
+  margin: 0 auto;
+  line-height: 1.65;
+}
+
+/* ── FORM CARD ── */
+.form-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 28px 24px;
+  max-width: 540px;
+  margin: 0 auto 40px;
+}
+.field-label {
+  display: block;
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 1px; text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.field-wrap {
+  position: relative;
+  margin-bottom: 12px;
+}
+.field-wrap input {
+  width: 100%;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 15px;
+  padding: 13px 42px 13px 14px;
+  outline: none;
+  font-family: var(--font);
+  transition: border-color 0.18s, background 0.18s;
+  -webkit-appearance: none;
+}
+.field-wrap input::placeholder { color: var(--dim); }
+.field-wrap input:focus {
+  border-color: var(--accent);
+  background: rgba(108,99,255,0.05);
+}
+.field-eye {
+  position: absolute; right:12px; top:50%;
+  transform: translateY(-50%);
+  background: none; border: none;
+  color: var(--muted); cursor: pointer;
+  padding: 6px; font-size: 14px; line-height:1;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Error */
+.error-box {
+  display: none;
+  background: rgba(255,70,70,0.09);
+  border: 1px solid rgba(255,70,70,0.28);
+  border-radius: 9px;
+  padding: 12px 14px;
+  font-size: 13.5px; color: #ff8a8a;
+  margin-bottom: 12px;
+  line-height: 1.55;
+}
+.error-box.show { display: block; }
+.error-box a { color: #ffaaaa; }
+
+/* Generate button */
+.btn-generate {
+  width: 100%;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 15px;
+  font-size: 16px; font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font);
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: opacity 0.15s, transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.btn-generate:hover:not(:disabled) { opacity: 0.88; }
+.btn-generate:active:not(:disabled) { transform: scale(0.985); }
+.btn-generate:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Manual toggle */
+.manual-trigger {
+  margin-top: 14px;
+  text-align: center;
+}
+.manual-trigger-btn {
+  background: none; border: none;
+  color: var(--muted); font-size: 13px;
+  cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 10px; border-radius: 8px;
+  font-family: var(--font);
+  transition: color 0.15s, background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.manual-trigger-btn:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+
+.manual-panel {
+  display: none;
+  margin-top: 14px;
+  padding: 14px;
+  background: rgba(255,255,255,0.025);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.manual-panel.open { display: block; }
+.manual-tip {
+  font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 10px;
+}
+.manual-tip strong { color: rgba(255,255,255,0.78); }
+.manual-panel textarea {
+  width: 100%;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 13px;
+  padding: 11px 13px;
+  resize: vertical;
+  min-height: 110px;
+  outline: none;
+  font-family: var(--font);
+  transition: border-color 0.18s;
+  -webkit-appearance: none;
+}
+.manual-panel textarea:focus { border-color: var(--accent); }
+
+/* ── LOADING ── */
+.loading-screen {
+  display: none;
+  text-align: center;
+  padding: 60px 20px;
+}
+.loading-screen.show { display: block; }
+.spinner {
+  width: 40px; height: 40px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.72s linear infinite;
+  margin: 0 auto 18px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { font-size: 15px; color: var(--muted); line-height: 1.65; }
+.loading-text strong { color: var(--text); }
+
+/* ── EXAMPLE SECTION ── */
+.example-section { padding: 56px 0 80px; }
+.section-eyebrow {
+  text-align: center;
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+.section-title {
+  text-align: center;
+  font-size: clamp(24px, 4vw, 36px);
+  font-weight: 800;
+  letter-spacing: -0.6px;
+  margin-bottom: 8px;
+}
+.section-sub {
+  text-align: center;
+  font-size: 15px; color: var(--muted);
+  margin-bottom: 44px;
+}
+
+/* Flow diagram: input → carousel */
+.demo-flow {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 24px;
+  max-width: 880px;
+  margin: 0 auto;
+}
+@media (max-width: 640px) {
+  .demo-flow {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    gap: 16px;
+  }
+  .demo-arrow { transform: rotate(90deg); }
+}
+
+.demo-input-side { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.demo-step-label {
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--muted);
+}
+.yt-preview-card {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.15s;
+}
+.yt-preview-card:hover { border-color: var(--border-hover); transform: translateY(-2px); }
+.yt-thumb-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16/9;
+  background: #111;
+  overflow: hidden;
+}
+.yt-thumb-wrap img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.yt-play-btn {
+  position: absolute; top:50%; left:50%;
+  transform: translate(-50%,-50%);
+  width: 48px; height: 48px;
+  background: rgba(0,0,0,0.7);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  backdrop-filter: blur(4px);
+}
+.yt-url-bar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--border);
+}
+.yt-url-icon { font-size: 13px; flex-shrink: 0; }
+.yt-url-text {
+  font-size: 12px; color: var(--muted);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-family: 'Courier New', monospace;
+}
+.demo-cta-btn {
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-border);
+  border-radius: 9px;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 13px; font-weight: 600;
+  padding: 9px 18px;
+  font-family: var(--font);
+  transition: background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.demo-cta-btn:hover { background: rgba(108,99,255,0.22); }
+
+.demo-arrow {
+  font-size: 28px;
+  color: var(--dim);
+  flex-shrink: 0;
+  line-height: 1;
+  padding: 8px;
+  text-align: center;
+}
+
+.demo-output-side { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+
+/* ── SLIDE CARD ── */
+.card-shell { width: 100%; max-width: 480px; }
+
+.slide-card {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 18px;
+  position: relative;
+  overflow: hidden;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.55);
+  touch-action: pan-y;
+}
+.slide-card:active { cursor: grabbing; }
+
+/* Thumbnail overlay layer */
+.card-thumb-layer {
+  position: absolute; inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+.card-thumb-layer img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  opacity: 0.22;
+  display: block;
+}
+
+/* Card content layer */
+.card-content-layer {
+  position: relative; z-index: 1;
+  height: 100%;
+  padding: clamp(22px,5vw,38px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.slide-counter {
+  font-size: 12px; font-weight: 600;
+  color: rgba(255,255,255,0.42);
+  letter-spacing: 0.3px;
+}
+.slide-tag {
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 1.2px; text-transform: uppercase;
+  padding: 4px 11px;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.13);
+  color: rgba(255,255,255,0.62);
+}
+.card-mid {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(14px,3vw,22px) 0;
+}
+.card-headline {
+  font-size: clamp(19px,4.5vw,30px);
+  font-weight: 800;
+  line-height: 1.18;
+  letter-spacing: -0.5px;
+  color: #fff;
+  margin-bottom: clamp(10px,2vw,16px);
+}
+.card-body-text {
+  font-size: clamp(12px,2.2vw,15px);
+  line-height: 1.72;
+  color: rgba(255,255,255,0.72);
+}
+.card-quote {
+  margin-top: clamp(12px,2.5vw,18px);
+  padding: 10px 14px;
+  background: rgba(255,255,255,0.1);
+  border-left: 3px solid rgba(255,255,255,0.32);
+  border-radius: 4px;
+  font-size: clamp(11px,1.8vw,13px);
+  font-style: italic;
+  color: rgba(255,255,255,0.8);
+  line-height: 1.55;
+}
+
+/* ── NAVIGATION ── */
+.card-nav {
+  display: flex; align-items: center; justify-content: center;
+  gap: 14px;
+  margin-top: 18px;
+}
+.nav-btn {
+  width: 44px; height: 44px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s, border-color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  flex-shrink: 0;
+}
+.nav-btn:hover:not(:disabled) { background: var(--surface2); border-color: var(--border-hover); }
+.nav-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+
+.dots {
+  display: flex; gap: 6px; align-items: center;
+  flex-wrap: wrap; justify-content: center;
+  max-width: 180px;
+}
+.dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--dim);
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.dot.on { background: var(--accent); width: 20px; border-radius: 3px; }
+
+/* ── RESULTS PAGE ── */
+#results-page { display: none; min-height: 100vh; }
+
+.results-bar {
+  display: flex; align-items: center; gap: 12px;
+  padding: 18px 20px;
+  max-width: 1080px;
+  margin: 0 auto;
+}
+.back-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 9px 16px;
+  font-size: 13px; font-family: var(--font);
+  display: flex; align-items: center; gap: 6px;
+  transition: all 0.15s;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.back-btn:hover { color: var(--text); border-color: var(--border-hover); }
+.results-title {
+  font-size: 16px; font-weight: 700; letter-spacing: -0.2px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+.results-content {
+  max-width: 1080px; margin: 0 auto;
+  padding: 4px 20px 80px;
+  display: flex; flex-direction: column; align-items: center;
+}
+
+/* Per-slide action row */
+.slide-actions {
+  display: flex; gap: 8px;
+  width: 100%; max-width: 480px;
+  margin-top: 14px;
+}
+.btn-sm {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 11px 10px;
+  font-size: 13px; font-weight: 500;
+  font-family: var(--font);
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  transition: all 0.15s;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  min-height: 44px;
+}
+.btn-sm:hover { color: var(--text); border-color: var(--border-hover); background: var(--surface2); }
+.btn-sm.ok { color: #66d48c; border-color: #66d48c; }
+
+/* Slide list */
+.slide-list-section {
+  width: 100%; max-width: 480px;
+  margin-top: 28px;
+}
+.slide-list-label {
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--dim);
+  margin-bottom: 10px;
+}
+.slide-row {
+  display: flex; align-items: flex-start; gap: 11px;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-bottom: 6px;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.slide-row:hover { background: var(--surface2); border-color: var(--border-hover); }
+.slide-row.on { border-color: var(--accent); background: var(--accent-bg); }
+.slide-row-n {
+  min-width: 24px; height: 24px;
+  border-radius: 6px;
+  background: var(--surface2);
+  font-size: 11px; font-weight: 700;
+  color: var(--muted);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.slide-row.on .slide-row-n { background: var(--accent); color: #fff; }
+.slide-row-h { font-size: 13px; font-weight: 600; line-height: 1.3; margin-bottom: 3px; }
+.slide-row-b {
+  font-size: 12px; color: var(--muted); line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Export section */
+.export-section {
+  width: 100%; max-width: 480px;
+  margin-top: 22px;
+  padding-top: 22px;
+  border-top: 1px solid var(--border);
+}
+.export-title {
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--dim);
+  margin-bottom: 10px;
+}
+.export-buttons {
+  display: flex; gap: 8px;
+}
+.export-note {
+  font-size: 12px; color: var(--dim);
+  margin-top: 10px; line-height: 1.5;
+}
+
+/* ── ANIMATIONS ── */
+@keyframes slideUp {
+  from { opacity:0; transform:translateY(16px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+.anim { animation: slideUp 0.35s ease both; }
+
+/* ── PROGRESS BAR (export) ── */
+.export-progress {
+  display: none;
+  margin-top: 10px;
+  background: var(--surface2);
+  border-radius: 4px;
+  height: 4px;
+  overflow: hidden;
+}
+.export-progress.show { display: block; }
+.export-progress-bar {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+  width: 0%;
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ LANDING PAGE ═══════════════ -->
+<div id="landing-page">
+  <div class="container">
+
+    <nav class="site-nav">
+      <a class="logo" href="#">
+        <div class="logo-mark">▶</div>
+        ReelSlide
+      </a>
+    </nav>
+
+    <div class="hero">
+      <div class="hero-badge">⚡ YouTube → LinkedIn</div>
+      <h1 class="hero-title">Turn any video into a<br><em>carousel that gets saved</em></h1>
+      <p class="hero-sub">Paste your transcript. Claude writes the slides, you export to LinkedIn in one tap. Free — no account needed.</p>
+    </div>
+
+    <div class="form-card anim">
+      <label class="field-label" for="manualTxt">Paste your transcript</label>
+      <p class="manual-tip" style="margin-bottom:10px">
+        On YouTube: click <strong>⋯</strong> below the player → <strong>Show transcript</strong> → select all → copy → paste here.
+      </p>
+      <textarea id="manualTxt" placeholder="Paste the full transcript text here..." style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;padding:11px 13px;resize:vertical;min-height:130px;outline:none;font-family:var(--font);transition:border-color 0.18s;-webkit-appearance:none;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+
+      <div class="error-box" id="errorBox" style="margin-top:10px"></div>
+
+      <button class="btn-generate" id="genBtn" onclick="handleGenerate()" style="margin-top:12px">
+        Generate carousel →
+      </button>
+
+      <p style="text-align:center;font-size:12px;color:var(--dim);margin-top:10px">5 free carousels per day · No account needed</p>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading-screen" id="loadingScreen">
+      <div class="spinner"></div>
+      <p class="loading-text" id="loadingText">Fetching transcript...</p>
+    </div>
+
+    <!-- Example section -->
+    <section class="example-section">
+      <p class="section-eyebrow">See how it works</p>
+      <h2 class="section-title">One link → a full carousel</h2>
+      <p class="section-sub">Paste any YouTube URL. Get slides in seconds. Export to LinkedIn.</p>
+
+      <div class="demo-flow">
+
+        <!-- Left: Input mockup -->
+        <div class="demo-input-side">
+          <span class="demo-step-label">1 — Paste a link</span>
+          <div class="yt-preview-card" style="max-width:340px;width:100%" onclick="loadExampleUrl()">
+            <div class="yt-thumb-wrap">
+              <img
+                src="https://i.ytimg.com/vi/5K9QhkPww44/hqdefault.jpg"
+                alt="Example YouTube video thumbnail"
+                onerror="this.style.background='#1a1a24';this.style.minHeight='180px'"
+              />
+              <div class="yt-play-btn">▶</div>
+            </div>
+            <div class="yt-url-bar">
+              <span class="yt-url-icon">🔗</span>
+              <span class="yt-url-text">youtube.com/watch?v=5K9QhkPww44</span>
+            </div>
+          </div>
+          <button class="demo-cta-btn" onclick="loadExampleUrl()">Try this video →</button>
+        </div>
+
+        <!-- Arrow -->
+        <div class="demo-arrow">→</div>
+
+        <!-- Right: Interactive demo carousel -->
+        <div class="demo-output-side">
+          <span class="demo-step-label">2 — Get polished slides</span>
+          <div id="demoCarouselMount" style="width:100%;max-width:340px;"></div>
+        </div>
+
+      </div>
+    </section>
+
+  </div>
+</div><!-- /landing-page -->
+
+<!-- ═══════════════ RESULTS PAGE ═══════════════ -->
+<div id="results-page">
+  <div class="results-bar">
+    <button class="back-btn" onclick="goBack()">← Back</button>
+    <div class="results-title" id="resultsTitle">Your carousel</div>
+  </div>
+
+  <div class="results-content">
+
+    <div class="card-shell">
+      <div class="slide-card" id="mainCard"
+           ontouchstart="onTouchStart(event)"
+           ontouchmove="onTouchMove(event)"
+           ontouchend="onTouchEnd(event)">
+      </div>
+    </div>
+
+    <div class="card-nav">
+      <button class="nav-btn" id="prevBtn" onclick="navPrev()" aria-label="Previous slide">←</button>
+      <div class="dots" id="dotsRow" role="tablist"></div>
+      <button class="nav-btn" id="nextBtn" onclick="navNext()" aria-label="Next slide">→</button>
+    </div>
+
+    <div class="slide-actions">
+      <button class="btn-sm" id="copySlideBtn" onclick="copyCurrentSlide()">📋 Copy slide</button>
+    </div>
+
+    <div class="slide-list-section">
+      <div class="slide-list-label">All slides</div>
+      <div id="slideList"></div>
+    </div>
+
+    <div class="export-section">
+      <div class="export-title">Export</div>
+      <div class="export-buttons">
+        <button class="btn-sm" id="pdfBtn" onclick="exportPDF()" style="flex:1.2">📄 Export PDF <span style="font-size:10px;opacity:0.6">(LinkedIn format)</span></button>
+        <button class="btn-sm" id="pngBtn" onclick="exportPNG()">🖼 PNG slide</button>
+        <button class="btn-sm" id="copyAllBtn" onclick="copyAll()">📋 Copy all</button>
+      </div>
+      <div class="export-progress" id="exportProgress">
+        <div class="export-progress-bar" id="exportBar"></div>
+      </div>
+      <p class="export-note">PDF uploads directly to LinkedIn as a native carousel — one page per slide.</p>
+    </div>
+
+  </div>
+</div><!-- /results-page -->
+
+<script>
+// ══════════════════════════════════════════════════════
+// CONSTANTS
+// ══════════════════════════════════════════════════════
+
+const GRADIENT_PAIRS = [
+  ['#1e1b4b','#312e81'],
+  ['#0f172a','#1e3a5f'],
+  ['#14532d','#166534'],
+  ['#3b0d2b','#6b1d47'],
+  ['#1a1a2e','#16213e'],
+  ['#2d1800','#4a2c00'],
+  ['#0c1a20','#0f3a52'],
+  ['#1f0a3a','#3d1266'],
+];
+const GRADIENTS = GRADIENT_PAIRS.map(([a,b]) => `linear-gradient(140deg,${a} 0%,${b} 100%)`);
+
+const DEMO_VIDEO_ID = '5K9QhkPww44';
+const DEMO_VIDEO_URL = `https://www.youtube.com/watch?v=${DEMO_VIDEO_ID}`;
+
+const DEMO_DATA = {
+  title: "Build Fast or Build Nothing: The Daily Builder's Framework",
+  slides: [
+    { headline: "Most builders never ship anything", body: "They spend months polishing ideas nobody asked for. The gap between thinking about building and actually shipping is where most ambitions quietly go to die.", stat: "90% of side projects are abandoned in the first month — not from lack of skill, but from overthinking.", imageQuery: "abandoned desk workspace" },
+    { headline: "Ship in 24 hours or not at all", body: "A hard time limit isn't about speed for its own sake. It forces brutal prioritization — you can only include what actually matters. Constraints are creative engines, not obstacles.", stat: null, imageQuery: "focused developer laptop night" },
+    { headline: "The landing page IS the product", body: "Before writing a single line of code, write the headline. If you can't explain what your app does in 8 words, you don't understand it well enough yet.", stat: '"The first test of a product idea is whether you can name it clearly."', imageQuery: "clean minimal web design" },
+    { headline: "Revenue validates faster than feedback", body: "1,000 upvotes on Product Hunt means less than one $5 payment. Enthusiasm is cheap — someone paying you is the signal that you've built something real.", stat: "Even $1 MRR tells you more than a 500-person waitlist.", imageQuery: "dollar bill payment success" },
+    { headline: "Build for a stranger, not yourself", body: "Every design decision should ask: would someone who's never met me understand this? The hardest shift is moving from building what you'd use to what others will find on their own.", stat: null, imageQuery: "stranger person city street" },
+    { headline: "Distribution before the second feature", body: "Most builders add features when nobody shows up. The problem almost never is features — it's that nobody knows the thing exists. Build the audience before you build the product.", stat: null, imageQuery: "megaphone announcement crowd" },
+    { headline: "Start today. The bar is lower than you think.", body: "Your messy MVP beats the polished idea you've been sitting on for three months. Post it. Let strangers find the bugs. That's how you learn what's worth fixing.", stat: "One published app teaches you more than ten unfinished ones.", imageQuery: "starting line runner momentum" }
+  ]
+};
+
+// ══════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════
+
+let slides = [];
+let idx = 0;
+let currentVideoId = null;
+let touchX0 = 0;
+let touchActive = false;
+
+// ══════════════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════════════
+
+function esc(s) {
+  if (!s) return '';
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function tagLabel(i, total) {
+  if (i === 0) return 'Hook';
+  if (i === total - 1) return 'Takeaway';
+  return 'Insight';
+}
+
+function thumbUrl(videoId) {
+  return videoId ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg` : null;
+}
+
+function showError(html) {
+  const el = document.getElementById('errorBox');
+  el.innerHTML = html;
+  el.classList.add('show');
+  el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+function clearError() { document.getElementById('errorBox').classList.remove('show'); }
+
+function setLoading(on, msg = '') {
+  const ls = document.getElementById('loadingScreen');
+  const fc = document.querySelector('.form-card');
+  if (on) {
+    ls.classList.add('show');
+    fc.style.display = 'none';
+    document.getElementById('loadingText').innerHTML = msg;
+  } else {
+    ls.classList.remove('show');
+    fc.style.display = '';
+  }
+}
+function setLoadingMsg(msg) { document.getElementById('loadingText').innerHTML = msg; }
+
+function loadExampleUrl() {
+  document.getElementById('manualTxt').focus();
+  document.querySelector('.form-card').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+// ══════════════════════════════════════════════════════
+// YOUTUBE TRANSCRIPT — MULTI-STRATEGY
+// ══════════════════════════════════════════════════════
+
+function parseVideoId(raw) {
+  const url = raw.trim();
+  // Bare 11-char video ID
+  if (/^[a-zA-Z0-9_-]{11}$/.test(url)) return url;
+  const patterns = [
+    /[?&]v=([a-zA-Z0-9_-]{11})/,           // ?v= or &v=
+    /youtu\.be\/([a-zA-Z0-9_-]{11})/,       // youtu.be/ID
+    /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/, // embed
+    /youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/, // shorts
+    /youtube\.com\/live\/([a-zA-Z0-9_-]{11})/,   // live streams
+    /youtube\.com\/v\/([a-zA-Z0-9_-]{11})/,       // old embed format
+    /\/([a-zA-Z0-9_-]{11})(?:[?&/]|$)/,           // last-resort: 11-char segment
+  ];
+  for (const p of patterns) {
+    const m = url.match(p);
+    if (m) return m[1];
+  }
+  return null;
+}
+
+// Fetch with manual timeout (AbortSignal.timeout not available in all Safari versions)
+async function fetchTimeout(url, ms = 12000, opts = {}) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), ms);
+  try {
+    const res = await fetch(url, { ...opts, signal: ctrl.signal });
+    clearTimeout(t);
+    return res;
+  } catch (e) {
+    clearTimeout(t);
+    throw e;
+  }
+}
+
+// ── Parse WebVTT (format Invidious returns)
+function parseVTT(vtt) {
+  return vtt.split('\n')
+    .filter(line => {
+      const t = line.trim();
+      if (!t) return false;
+      if (t.includes('-->')) return false;           // timestamp lines
+      if (t.startsWith('WEBVTT')) return false;
+      if (t.startsWith('NOTE') || t.startsWith('Kind:') || t.startsWith('Language:')) return false;
+      if (/^\d+$/.test(t)) return false;             // cue numbers
+      return true;
+    })
+    .map(l => l.replace(/<[^>]+>/g, '').trim())      // strip inline HTML/timing tags
+    .filter(Boolean)
+    .join(' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// ── Parse caption XML (format YouTube timedtext returns)
+function parseXML(xml) {
+  const doc = new DOMParser().parseFromString(xml, 'text/xml');
+  const nodes = doc.querySelectorAll('text');
+  if (!nodes.length) return null;
+  return Array.from(nodes)
+    .map(n => n.textContent
+      .replace(/&#39;/g,"'").replace(/&amp;/g,'&').replace(/&quot;/g,'"')
+      .replace(/&lt;/g,'<').replace(/&gt;/g,'>').trim()
+    )
+    .filter(Boolean).join(' ').replace(/\s+/g,' ').trim();
+}
+
+// ── STRATEGY 1: Supabase Edge Function (Innertube Android API)
+const EDGE_FN_URL = 'https://qsffjtynqsveydororxh.supabase.co/functions/v1/yt-transcript';
+
+async function fetchViaEdgeFunction(videoId) {
+  const res = await fetchTimeout(`${EDGE_FN_URL}?videoId=${videoId}`, 20000);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || `Edge function error ${res.status}`);
+  if (!data.transcript || data.transcript.length < 100) throw new Error('Transcript too short');
+  return data.transcript;
+}
+
+// ── STRATEGY 2: Vercel API route (same Innertube approach, different infra)
+// Only works when the app is hosted on Vercel (relative /api/transcript endpoint)
+async function fetchViaVercelAPI(videoId) {
+  if (location.protocol === 'file:') throw new Error('Not running on Vercel');
+  const res = await fetchTimeout(`/api/transcript?videoId=${videoId}`, 20000);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || `Vercel API error ${res.status}`);
+  if (!data.transcript || data.transcript.length < 100) throw new Error('Transcript too short');
+  return data.transcript;
+}
+
+// ── STRATEGY 3: Proxy-based page scrape (last resort)
+const CORS_PROXIES = [
+  url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+];
+
+function extractCaptionTracks(html) {
+  const marker = 'ytInitialPlayerResponse = ';
+  const start = html.indexOf(marker);
+  if (start === -1) return null;
+  let depth = 0, end = start + marker.length;
+  for (let i = end; i < html.length; i++) {
+    if (html[i] === '{') depth++;
+    else if (html[i] === '}') { depth--; if (depth === 0) { end = i + 1; break; } }
+  }
+  try {
+    const data = JSON.parse(html.slice(start + marker.length, end));
+    return data?.captions?.playerCaptionsTracklistRenderer?.captionTracks || null;
+  } catch { return null; }
+}
+
+async function fetchViaProxy(videoId) {
+  const pageUrl = `https://www.youtube.com/watch?v=${videoId}`;
+  for (const makeProxy of CORS_PROXIES) {
+    try {
+      const res = await fetchTimeout(makeProxy(pageUrl), 12000);
+      if (!res.ok) continue;
+      const html = await res.text();
+      if (html.includes('confirm you') || html.includes('not a robot')) continue;
+      const tracks = extractCaptionTracks(html);
+      if (!tracks?.length) continue;
+      const track = tracks.find(t=>t.languageCode==='en')
+                  || tracks.find(t=>t.languageCode?.startsWith('en'))
+                  || tracks[0];
+      const cRes = await fetchTimeout(makeProxy(track.baseUrl), 8000);
+      if (!cRes.ok) continue;
+      const xml = await cRes.text();
+      const transcript = parseXML(xml);
+      if (transcript && transcript.length > 150) return transcript;
+    } catch { /* try next proxy */ }
+  }
+  throw new Error('All proxy strategies failed');
+}
+
+// ── MAIN: try all strategies in order
+async function fetchTranscript(videoId) {
+  const strategies = [
+    { name: 'transcript service',  fn: () => fetchViaEdgeFunction(videoId) },
+    { name: 'Vercel API',          fn: () => fetchViaVercelAPI(videoId) },
+    { name: 'CORS proxy',          fn: () => fetchViaProxy(videoId) },
+  ];
+
+  for (const s of strategies) {
+    try {
+      setLoadingMsg(`Fetching transcript via ${s.name}...`);
+      return await s.fn();
+    } catch { /* try next */ }
+  }
+
+  throw new Error('All automatic strategies failed');
+}
+
+// ══════════════════════════════════════════════════════
+// GENERATE API (server-side Claude + hosted key)
+// ══════════════════════════════════════════════════════
+
+async function callGenerateAPI(transcript) {
+  const res = await fetchTimeout('/api/generate', 60000, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ transcript }),
+  });
+
+  if (res.status === 429) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error('RATE_LIMIT:' + (data.hint || "You've hit the daily limit. Come back tomorrow!"));
+  }
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || `Server error ${res.status}`);
+  }
+
+  const parsed = await res.json();
+  if (!Array.isArray(parsed.slides) || parsed.slides.length < 2) {
+    throw new Error('Too few slides returned — please try again.');
+  }
+  return parsed;
+}
+
+// ══════════════════════════════════════════════════════
+// MAIN HANDLER
+// ══════════════════════════════════════════════════════
+
+async function handleGenerate() {
+  clearError();
+  const transcript = document.getElementById('manualTxt').value.trim();
+
+  if (!transcript) {
+    showError('Paste a transcript to get started — open any YouTube video, click <strong>⋯ → Show transcript</strong>, copy all, and paste here.');
+    return;
+  }
+  if (transcript.split(/\s+/).length < 30) {
+    showError('That transcript looks too short — paste the full text for best results.');
+    return;
+  }
+
+  currentVideoId = null;
+  const words = transcript.split(/\s+/).length;
+  setLoading(true, `<strong>${words.toLocaleString()} words</strong> captured — generating slides with Claude...`);
+
+  try {
+    const result = await callGenerateAPI(transcript);
+    setLoading(false);
+    showResults(result);
+  } catch (err) {
+    setLoading(false);
+    if (err.message.startsWith('RATE_LIMIT:')) {
+      showError(err.message.slice('RATE_LIMIT:'.length));
+    } else {
+      showError('Something went wrong: ' + err.message);
+    }
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// CARD RENDERING
+// ══════════════════════════════════════════════════════
+
+function slidePhotoUrl(s, i) {
+  // Use imageQuery from Claude if present, otherwise fall back to headline
+  const seed = encodeURIComponent((s.imageQuery || s.headline || `slide${i}`).toLowerCase().replace(/\s+/g, '-'));
+  return `https://picsum.photos/seed/${seed}/800/800`;
+}
+
+function renderCard(cardEl, slideData, i, videoId) {
+  const s = slideData[i];
+  const total = slideData.length;
+  const photo = slidePhotoUrl(s, i);
+
+  cardEl.style.background = GRADIENTS[i % GRADIENTS.length];
+
+  cardEl.innerHTML = `
+    <div class="card-thumb-layer"><img src="${esc(photo)}" alt="" loading="lazy" /></div>
+    <div class="card-content-layer">
+      <div class="card-top">
+        <span class="slide-counter">${i + 1} / ${total}</span>
+        <span class="slide-tag">${tagLabel(i, total)}</span>
+      </div>
+      <div class="card-mid">
+        <h2 class="card-headline">${esc(s.headline)}</h2>
+        <p class="card-body-text">${esc(s.body)}</p>
+        ${s.stat ? `<blockquote class="card-quote">${esc(s.stat)}</blockquote>` : ''}
+      </div>
+    </div>
+  `;
+}
+
+function buildDots(containerId, count) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = '';
+  for (let i = 0; i < count; i++) {
+    const d = document.createElement('button');
+    d.className = 'dot' + (i === 0 ? ' on' : '');
+    d.setAttribute('role', 'tab');
+    d.setAttribute('aria-label', `Slide ${i + 1}`);
+    d.onclick = () => goTo(i);
+    el.appendChild(d);
+  }
+}
+
+function syncUI() {
+  const total = slides.length;
+  renderCard(document.getElementById('mainCard'), slides, idx, currentVideoId);
+  document.getElementById('prevBtn').disabled = idx === 0;
+  document.getElementById('nextBtn').disabled = idx === total - 1;
+  document.querySelectorAll('#dotsRow .dot').forEach((d, i) => d.classList.toggle('on', i === idx));
+  document.querySelectorAll('#slideList .slide-row').forEach((r, i) => r.classList.toggle('on', i === idx));
+}
+
+function buildSlideList() {
+  const list = document.getElementById('slideList');
+  list.innerHTML = '';
+  slides.forEach((s, i) => {
+    const row = document.createElement('div');
+    row.className = 'slide-row' + (i === 0 ? ' on' : '');
+    row.onclick = () => goTo(i);
+    row.innerHTML = `
+      <div class="slide-row-n">${i + 1}</div>
+      <div>
+        <div class="slide-row-h">${esc(s.headline)}</div>
+        <div class="slide-row-b">${esc(s.body)}</div>
+      </div>
+    `;
+    list.appendChild(row);
+  });
+}
+
+function showResults(data) {
+  slides = data.slides;
+  idx = 0;
+  document.getElementById('resultsTitle').textContent = data.title || 'Your carousel';
+  buildDots('dotsRow', slides.length);
+  buildSlideList();
+  syncUI();
+  document.getElementById('landing-page').style.display = 'none';
+  document.getElementById('results-page').style.display = 'block';
+  window.scrollTo(0, 0);
+}
+
+function goBack() {
+  document.getElementById('landing-page').style.display = '';
+  document.getElementById('results-page').style.display = 'none';
+  document.querySelector('.form-card').style.display = '';
+  setLoading(false); clearError();
+  window.scrollTo(0, 0);
+}
+
+// ── Navigation
+function goTo(i) { idx = i; syncUI(); }
+function navPrev() { if (idx > 0) { idx--; syncUI(); } }
+function navNext() { if (idx < slides.length - 1) { idx++; syncUI(); } }
+
+// ── Touch swipe
+function onTouchStart(e) {
+  touchX0 = e.touches[0].clientX;
+  touchActive = true;
+}
+function onTouchMove(e) {
+  if (!touchActive) return;
+  const dx = e.touches[0].clientX - touchX0;
+  if (Math.abs(dx) > 10) e.preventDefault();
+}
+function onTouchEnd(e) {
+  if (!touchActive) return;
+  touchActive = false;
+  const dx = e.changedTouches[0].clientX - touchX0;
+  if (Math.abs(dx) > 48) { dx < 0 ? navNext() : navPrev(); }
+}
+
+// ── Keyboard
+document.addEventListener('keydown', e => {
+  if (document.getElementById('results-page').style.display !== 'none') {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') navNext();
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   navPrev();
+  }
+  if (e.key === 'Enter' && document.getElementById('landing-page').style.display !== 'none') {
+    if (document.activeElement?.tagName !== 'TEXTAREA') handleGenerate();
+  }
+});
+
+// ══════════════════════════════════════════════════════
+// COPY / TEXT EXPORT
+// ══════════════════════════════════════════════════════
+
+function slideToText(s, i) {
+  const total = slides.length;
+  let t = `— Slide ${i+1}: ${tagLabel(i,total).toUpperCase()} —\n${s.headline}\n\n${s.body}`;
+  if (s.stat) t += `\n\n"${s.stat}"`;
+  return t;
+}
+
+function writeCb(text) {
+  if (navigator.clipboard?.writeText) return navigator.clipboard.writeText(text);
+  const ta = document.createElement('textarea');
+  ta.value = text; document.body.appendChild(ta); ta.select();
+  document.execCommand('copy'); document.body.removeChild(ta);
+  return Promise.resolve();
+}
+
+function flashBtn(id, label, ms = 2000) {
+  const btn = document.getElementById(id);
+  const orig = btn.innerHTML;
+  btn.innerHTML = label; btn.classList.add('ok');
+  setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('ok'); }, ms);
+}
+
+function copyCurrentSlide() {
+  writeCb(slideToText(slides[idx], idx)).then(() => flashBtn('copySlideBtn','✓ Copied'));
+}
+function copyAll() {
+  const all = slides.map((s,i) => slideToText(s,i)).join('\n\n');
+  writeCb(all).then(() => flashBtn('copyAllBtn','✓ All copied'));
+}
+
+// ══════════════════════════════════════════════════════
+// CANVAS RENDERING (for PDF + PNG export)
+// ══════════════════════════════════════════════════════
+
+// Load thumbnail as crossOrigin image for canvas use
+async function loadCanvasThumb(videoId) {
+  if (!videoId) return null;
+  return new Promise(resolve => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    // Use proxy to get CORS-safe image
+    img.src = `https://corsproxy.io/?${encodeURIComponent(`https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`)}`;
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    setTimeout(() => resolve(null), 8000);
+  });
+}
+
+function hexToRgb(hex) {
+  const r = parseInt(hex.slice(1,3),16);
+  const g = parseInt(hex.slice(3,5),16);
+  const b = parseInt(hex.slice(5,7),16);
+  return [r,g,b];
+}
+
+function canvasRoundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.lineTo(x+w-r,y); ctx.arcTo(x+w,y,x+w,y+r,r);
+  ctx.lineTo(x+w,y+h-r); ctx.arcTo(x+w,y+h,x+w-r,y+h,r);
+  ctx.lineTo(x+r,y+h); ctx.arcTo(x,y+h,x,y+h-r,r);
+  ctx.lineTo(x,y+r); ctx.arcTo(x,y,x+r,y,r);
+  ctx.closePath();
+}
+
+// Wrap text and return final Y
+function canvasText(ctx, text, x, y, maxW, lh) {
+  const words = text.split(' ');
+  let line = '', cy = y;
+  for (const w of words) {
+    const test = line + w + ' ';
+    if (ctx.measureText(test).width > maxW && line) {
+      ctx.fillText(line.trim(), x, cy);
+      line = w + ' '; cy += lh;
+    } else { line = test; }
+  }
+  if (line.trim()) { ctx.fillText(line.trim(), x, cy); cy += lh; }
+  return cy;
+}
+
+async function renderSlideToCanvas(slide, i, total, thumbImg) {
+  const S = 1080, pad = 76;
+  const W = S - pad * 2;
+  const canvas = document.createElement('canvas');
+  canvas.width = S; canvas.height = S;
+  const ctx = canvas.getContext('2d');
+
+  // Gradient background
+  const [c1, c2] = GRADIENT_PAIRS[i % GRADIENT_PAIRS.length];
+  const grad = ctx.createLinearGradient(0, 0, S * 0.7, S);
+  grad.addColorStop(0, c1); grad.addColorStop(1, c2);
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, S, S);
+
+  // Thumbnail texture layer
+  if (thumbImg) {
+    ctx.save();
+    ctx.globalAlpha = 0.09;
+    // cover-fit
+    const ar = thumbImg.width / thumbImg.height;
+    let dx, dy, dw, dh;
+    if (ar > 1) { dh = S; dw = S * ar; dx = -(dw-S)/2; dy = 0; }
+    else { dw = S; dh = S / ar; dx = 0; dy = -(dh-S)/2; }
+    ctx.drawImage(thumbImg, dx, dy, dw, dh);
+    ctx.restore();
+    // Re-apply gradient on top with partial opacity
+    ctx.save();
+    ctx.globalAlpha = 0.82;
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, S, S);
+    ctx.restore();
+  }
+
+  // ── Counter (top left)
+  ctx.font = '500 26px Arial, sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.42)';
+  ctx.fillText(`${i+1} / ${total}`, pad, pad + 18);
+
+  // ── Tag pill (top right)
+  const tag = i === 0 ? 'HOOK' : i === total-1 ? 'TAKEAWAY' : 'INSIGHT';
+  ctx.font = 'bold 22px Arial, sans-serif';
+  const tagW = ctx.measureText(tag).width + 36;
+  const pillH = 38, pillY = pad - 10, pillX = S - pad - tagW;
+  ctx.fillStyle = 'rgba(255,255,255,0.13)';
+  canvasRoundRect(ctx, pillX, pillY, tagW, pillH, 19);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.62)';
+  ctx.fillText(tag, pillX + 18, pillY + 25);
+
+  // ── Headline
+  let ty = 390;
+  ctx.font = 'bold 66px Arial, sans-serif';
+  ctx.fillStyle = '#ffffff';
+  ty = canvasText(ctx, slide.headline, pad, ty, W, 82);
+  ty += 24;
+
+  // ── Body text
+  ctx.font = '400 33px Arial, sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.73)';
+  ty = canvasText(ctx, slide.body, pad, ty, W, 50);
+
+  // ── Stat block
+  if (slide.stat) {
+    ty += 24;
+    ctx.fillStyle = 'rgba(255,255,255,0.32)';
+    ctx.fillRect(pad, ty - 4, 4, 58);
+    ctx.font = 'italic 300 28px Arial, sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.8)';
+    canvasText(ctx, `"${slide.stat}"`, pad + 18, ty, W - 18, 42);
+  }
+
+  // ── Watermark
+  ctx.font = '400 22px Arial, sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.22)';
+  ctx.fillText('Made with ReelSlide', pad, S - pad);
+
+  return canvas;
+}
+
+// ══════════════════════════════════════════════════════
+// PDF EXPORT (LinkedIn carousel format)
+// ══════════════════════════════════════════════════════
+
+async function loadJsPDF() {
+  if (window.jspdf?.jsPDF) return window.jspdf;
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    // No SRI hash — avoids hash-mismatch blocks on some browsers/networks
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    s.onload = () => {
+      if (window.jspdf?.jsPDF) resolve(window.jspdf);
+      else reject(new Error('jsPDF loaded but jsPDF constructor not found'));
+    };
+    s.onerror = () => reject(new Error('Could not load PDF library — check your internet connection'));
+    document.head.appendChild(s);
+  });
+}
+
+function setExportProgress(pct) {
+  const bar = document.getElementById('exportProgress');
+  const fill = document.getElementById('exportBar');
+  if (pct === null) { bar.classList.remove('show'); fill.style.width = '0%'; }
+  else { bar.classList.add('show'); fill.style.width = pct + '%'; }
+}
+
+function showExportError(msg) {
+  // Show error inline below the export buttons
+  let el = document.getElementById('exportErrorMsg');
+  if (!el) {
+    el = document.createElement('p');
+    el.id = 'exportErrorMsg';
+    el.style.cssText = 'font-size:12px;color:#ff8a8a;margin-top:8px;line-height:1.5';
+    document.querySelector('.export-section').appendChild(el);
+  }
+  el.textContent = msg;
+  setTimeout(() => { if (el) el.textContent = ''; }, 6000);
+}
+
+async function exportPDF() {
+  const btn = document.getElementById('pdfBtn');
+  const orig = btn.innerHTML;
+  btn.innerHTML = '⏳ Building PDF...'; btn.disabled = true;
+  setExportProgress(5);
+
+  try {
+    // Load jsPDF
+    const jspdfModule = await loadJsPDF();
+    const jsPDF = jspdfModule.jsPDF;
+    setExportProgress(15);
+
+    // Try loading thumbnail for canvas (fails gracefully)
+    const thumbImg = await loadCanvasThumb(currentVideoId);
+    setExportProgress(22);
+
+    // Create square PDF — 1080×1080 pt. LinkedIn accepts any square PDF.
+    // Using pt unit avoids jsPDF's px-scaling quirks across browsers.
+    const doc = new jsPDF({ unit: 'pt', format: [1080, 1080], compress: true });
+
+    for (let i = 0; i < slides.length; i++) {
+      const canvas = await renderSlideToCanvas(slides[i], i, slides.length, thumbImg);
+      const imgData = canvas.toDataURL('image/jpeg', 0.9);
+      if (i > 0) doc.addPage([1080, 1080]);
+      doc.addImage(imgData, 'JPEG', 0, 0, 1080, 1080, undefined, 'FAST');
+      setExportProgress(22 + Math.round((i + 1) / slides.length * 70));
+    }
+
+    const rawTitle = document.getElementById('resultsTitle').textContent;
+    const safeTitle = rawTitle.replace(/[^a-zA-Z0-9\s-]/g,'').trim().slice(0,40) || 'carousel';
+    doc.save(`${safeTitle}.pdf`);
+
+    setExportProgress(100);
+    setTimeout(() => setExportProgress(null), 1800);
+    flashBtn('pdfBtn', '✓ PDF saved!', 3000);
+
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    btn.innerHTML = orig;
+    btn.disabled = false;
+    setExportProgress(null);
+    showExportError('PDF export failed: ' + msg);
+  } finally {
+    btn.disabled = false;
+    if (btn.innerHTML === '⏳ Building PDF...') btn.innerHTML = orig;
+  }
+}
+
+async function exportPNG() {
+  const btn = document.getElementById('pngBtn');
+  const orig = btn.innerHTML;
+  btn.innerHTML = '⏳ Rendering...'; btn.disabled = true;
+
+  try {
+    const thumbImg = await loadCanvasThumb(currentVideoId);
+    const canvas = await renderSlideToCanvas(slides[idx], idx, slides.length, thumbImg);
+    const link = document.createElement('a');
+    link.download = `slide-${idx + 1}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    flashBtn('pngBtn', '✓ Saved!', 2500);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    showExportError('PNG export failed: ' + msg);
+    btn.innerHTML = orig;
+  } finally {
+    btn.disabled = false;
+    if (btn.innerHTML === '⏳ Rendering...') btn.innerHTML = orig;
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// DEMO CAROUSEL (landing page)
+// ══════════════════════════════════════════════════════
+
+(function initDemo() {
+  const mount = document.getElementById('demoCarouselMount');
+  let di = 0;
+  const ds = DEMO_DATA.slides;
+  const total = ds.length;
+  let dtx = 0, dtActive = false;
+
+  function nav(dir) { di = Math.max(0, Math.min(total-1, di + dir)); render(); }
+
+  function render() {
+    const s = ds[di];
+
+    // card
+    const card = document.createElement('div');
+    card.className = 'slide-card';
+    card.style.background = GRADIENTS[di % GRADIENTS.length];
+    card.innerHTML = `
+      <div class="card-thumb-layer">
+        <img src="https://i.ytimg.com/vi/${DEMO_VIDEO_ID}/hqdefault.jpg" alt="" />
+      </div>
+      <div class="card-content-layer">
+        <div class="card-top">
+          <span class="slide-counter">${di+1} / ${total}</span>
+          <span class="slide-tag">${tagLabel(di, total)}</span>
+        </div>
+        <div class="card-mid">
+          <h2 class="card-headline">${esc(s.headline)}</h2>
+          <p class="card-body-text">${esc(s.body)}</p>
+          ${s.stat ? `<blockquote class="card-quote">${esc(s.stat)}</blockquote>` : ''}
+        </div>
+      </div>
+    `;
+    card.ontouchstart = e => { dtx = e.touches[0].clientX; dtActive = true; };
+    card.ontouchmove  = e => { if (dtActive) e.preventDefault(); };
+    card.ontouchend   = e => {
+      if (!dtActive) return; dtActive = false;
+      const dx = e.changedTouches[0].clientX - dtx;
+      if (Math.abs(dx) > 48) nav(dx < 0 ? 1 : -1);
+    };
+
+    // nav row
+    const navRow = document.createElement('div');
+    navRow.className = 'card-nav'; navRow.style.marginTop = '16px';
+
+    const prev = document.createElement('button');
+    prev.className = 'nav-btn'; prev.textContent = '←';
+    prev.disabled = di === 0; prev.onclick = () => nav(-1);
+
+    const dotsEl = document.createElement('div');
+    dotsEl.className = 'dots';
+    ds.forEach((_, j) => {
+      const d = document.createElement('button');
+      d.className = 'dot' + (j === di ? ' on' : '');
+      d.onclick = () => { di = j; render(); };
+      dotsEl.appendChild(d);
+    });
+
+    const nxt = document.createElement('button');
+    nxt.className = 'nav-btn'; nxt.textContent = '→';
+    nxt.disabled = di === total-1; nxt.onclick = () => nav(1);
+
+    navRow.append(prev, dotsEl, nxt);
+
+    mount.innerHTML = '';
+    mount.append(card, navRow);
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>
