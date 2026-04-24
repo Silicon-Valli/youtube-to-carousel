@@ -1,8 +1,9 @@
-// Vercel serverless function — YouTube transcript fetcher (v2)
+// Vercel serverless function — YouTube transcript fetcher
 // Strategy 1: youtube-transcript npm package (battle-tested)
 // Strategy 2: Page scrape with raw caption URL (no fmt modification)
 // Strategy 3: WEB Innertube with visitorData
-// Strategy 4: Timedtext direct
+// Strategy 4: MWEB Innertube (mobile web client)
+// Strategy 5: Timedtext direct
 
 let YoutubeTranscript; try { YoutubeTranscript = require('youtube-transcript').YoutubeTranscript; } catch(e) {}
 
@@ -78,7 +79,6 @@ async function tryPageScrapeRaw(videoId) {
   if (html.length < 5000) throw new Error('Page too short');
   if (html.includes('consent.youtube.com')) throw new Error('Consent redirect');
 
-  // Use same parsing as youtube-transcript: split on "captions":
   const split = html.split('"captions":');
   if (split.length <= 1) throw new Error('No captions data in page');
 
@@ -93,11 +93,14 @@ async function tryPageScrapeRaw(videoId) {
   if (!tracks.length) throw new Error('No caption tracks found');
 
   const track = pickTrack(tracks);
-  // Use the raw baseUrl — do NOT add fmt=json3 (url may already be signed/parameterized)
   const captionUrl = track.baseUrl;
 
   const cr = await abortFetch(captionUrl, {
-    headers: { 'Accept-Language': 'en-US', },
+    headers: {
+      'Accept-Language': 'en-US',
+      'Referer': `https://www.youtube.com/watch?v=${videoId}`,
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+    },
   }, 8000);
 
   if (!cr.ok) throw new Error(`Caption ${cr.status}`);
@@ -160,7 +163,50 @@ async function tryWebWithVisitor(videoId) {
   return { transcript, language: track.languageCode };
 }
 
-// ── Strategy 4: timedtext direct
+// ── Strategy 4: MWEB Innertube (mobile web — different IP treatment)
+async function tryMWeb(videoId) {
+  const res = await abortFetch('https://www.youtube.com/youtubei/v1/player', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1',
+      'X-YouTube-Client-Name': '2',
+      'X-YouTube-Client-Version': '2.20230816.00.00',
+      'Origin': 'https://www.youtube.com',
+      'Referer': `https://www.youtube.com/watch?v=${videoId}`,
+    },
+    body: JSON.stringify({
+      videoId,
+      context: {
+        client: {
+          clientName: 'MWEB',
+          clientVersion: '2.20230816.00.00',
+          hl: 'en',
+          gl: 'US',
+        },
+      },
+    }),
+  }, 12000);
+  if (!res.ok) throw new Error(`MWEB Innertube ${res.status}`);
+  const data = await res.json();
+  const tracks = data?.captions?.playerCaptionsTracklistRenderer?.captionTracks || [];
+  if (!tracks.length) throw new Error('No captions (MWEB)');
+  const track = pickTrack(tracks);
+  const cr = await abortFetch(track.baseUrl, {
+    headers: {
+      'Accept-Language': 'en-US',
+      'Referer': `https://www.youtube.com/watch?v=${videoId}`,
+      'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1',
+    },
+  }, 8000);
+  if (!cr.ok) throw new Error(`Caption ${cr.status}`);
+  const text = await cr.text();
+  const transcript = parseJSON3(text) || parseXML(text) || parseVTT(text);
+  if (!transcript || transcript.length < 30) throw new Error('Transcript too short (MWEB)');
+  return { transcript, language: track.languageCode };
+}
+
+// ── Strategy 5: timedtext direct
 async function tryTimedtext(videoId) {
   for (const lang of ['en','en-US','en-GB']) {
     try {
@@ -187,6 +233,7 @@ module.exports = async function handler(req, res) {
     { name: 'yt-pkg',      fn: () => tryYoutubeTranscriptPkg(videoId) },
     { name: 'page-raw',    fn: () => tryPageScrapeRaw(videoId) },
     { name: 'web+visitor', fn: () => tryWebWithVisitor(videoId) },
+    { name: 'mweb',        fn: () => tryMWeb(videoId) },
     { name: 'timedtext',   fn: () => tryTimedtext(videoId) },
   ];
 
