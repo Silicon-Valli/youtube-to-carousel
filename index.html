@@ -380,7 +380,7 @@ body {
 .card-thumb-layer img {
   width: 100%; height: 100%;
   object-fit: cover;
-  opacity: 0.22;
+  opacity: 0.13;
   display: block;
 }
 
@@ -418,30 +418,37 @@ body {
   flex-direction: column;
   justify-content: center;
   padding: clamp(14px,3vw,22px) 0;
+  overflow: hidden;
+  min-height: 0;
 }
 .card-headline {
-  font-size: clamp(19px,4.5vw,30px);
+  font-size: clamp(24px,5.5vw,40px);
   font-weight: 800;
-  line-height: 1.18;
-  letter-spacing: -0.5px;
+  line-height: 1.12;
+  letter-spacing: -0.8px;
   color: #fff;
-  margin-bottom: clamp(10px,2vw,16px);
+  text-shadow: 0 1px 8px rgba(0,0,0,0.5);
+  margin-bottom: clamp(12px,2.5vw,20px);
 }
 .card-body-text {
-  font-size: clamp(12px,2.2vw,15px);
-  line-height: 1.72;
-  color: rgba(255,255,255,0.72);
+  font-size: clamp(13px,2.5vw,17px);
+  line-height: 1.65;
+  color: rgba(255,255,255,0.88);
+  text-shadow: 0 1px 4px rgba(0,0,0,0.4);
 }
 .card-quote {
   margin-top: clamp(12px,2.5vw,18px);
-  padding: 10px 14px;
-  background: rgba(255,255,255,0.1);
-  border-left: 3px solid rgba(255,255,255,0.32);
+  padding: 12px 16px;
+  background: rgba(255,255,255,0.14);
+  border-left: 3px solid rgba(255,255,255,0.5);
   border-radius: 4px;
-  font-size: clamp(11px,1.8vw,13px);
-  font-style: italic;
-  color: rgba(255,255,255,0.8);
-  line-height: 1.55;
+  font-size: clamp(13px,2.2vw,16px);
+  font-weight: 700;
+  font-style: normal;
+  color: #fff;
+  line-height: 1.45;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.4);
+  letter-spacing: -0.2px;
 }
 
 /* ── NAVIGATION ── */
@@ -680,15 +687,15 @@ body {
     <!-- Example section -->
     <section class="example-section">
       <p class="section-eyebrow">See how it works</p>
-      <h2 class="section-title">One link → a full carousel</h2>
-      <p class="section-sub">Paste any YouTube URL. Get slides in seconds. Export to LinkedIn.</p>
+      <h2 class="section-title">Transcript in → carousel out</h2>
+      <p class="section-sub">Copy the transcript from any YouTube video. Paste it here. Get LinkedIn slides in seconds.</p>
 
       <div class="demo-flow">
 
         <!-- Left: Input mockup -->
         <div class="demo-input-side">
-          <span class="demo-step-label">1 — Paste a link</span>
-          <div class="yt-preview-card" style="max-width:340px;width:100%" onclick="loadExampleUrl()">
+          <span class="demo-step-label">1 — Copy the transcript</span>
+          <div class="yt-preview-card" style="max-width:340px;width:100%">
             <div class="yt-thumb-wrap">
               <img
                 src="https://i.ytimg.com/vi/5K9QhkPww44/hqdefault.jpg"
@@ -698,11 +705,11 @@ body {
               <div class="yt-play-btn">▶</div>
             </div>
             <div class="yt-url-bar">
-              <span class="yt-url-icon">🔗</span>
-              <span class="yt-url-text">youtube.com/watch?v=5K9QhkPww44</span>
+              <span class="yt-url-icon">📋</span>
+              <span class="yt-url-text">Click ⋯ below the video → Show transcript → copy all</span>
             </div>
           </div>
-          <button class="demo-cta-btn" onclick="loadExampleUrl()">Try this video →</button>
+          <button class="demo-cta-btn" onclick="loadExampleUrl()">Try it yourself →</button>
         </div>
 
         <!-- Arrow -->
@@ -712,6 +719,7 @@ body {
         <div class="demo-output-side">
           <span class="demo-step-label">2 — Get polished slides</span>
           <div id="demoCarouselMount" style="width:100%;max-width:340px;"></div>
+          <button class="demo-cta-btn" id="demoPdfBtn" onclick="exportDemoPDF()" style="margin-top:14px">📄 Export demo as PDF →</button>
         </div>
 
       </div>
@@ -789,15 +797,14 @@ const DEMO_VIDEO_ID = '5K9QhkPww44';
 const DEMO_VIDEO_URL = `https://www.youtube.com/watch?v=${DEMO_VIDEO_ID}`;
 
 const DEMO_DATA = {
-  title: "Build Fast or Build Nothing: The Daily Builder's Framework",
+  title: "Most People Guess Their Body Fat Wrong",
   slides: [
-    { headline: "Most builders never ship anything", body: "They spend months polishing ideas nobody asked for. The gap between thinking about building and actually shipping is where most ambitions quietly go to die.", stat: "90% of side projects are abandoned in the first month — not from lack of skill, but from overthinking.", imageQuery: "abandoned desk workspace" },
-    { headline: "Ship in 24 hours or not at all", body: "A hard time limit isn't about speed for its own sake. It forces brutal prioritization — you can only include what actually matters. Constraints are creative engines, not obstacles.", stat: null, imageQuery: "focused developer laptop night" },
-    { headline: "The landing page IS the product", body: "Before writing a single line of code, write the headline. If you can't explain what your app does in 8 words, you don't understand it well enough yet.", stat: '"The first test of a product idea is whether you can name it clearly."', imageQuery: "clean minimal web design" },
-    { headline: "Revenue validates faster than feedback", body: "1,000 upvotes on Product Hunt means less than one $5 payment. Enthusiasm is cheap — someone paying you is the signal that you've built something real.", stat: "Even $1 MRR tells you more than a 500-person waitlist.", imageQuery: "dollar bill payment success" },
-    { headline: "Build for a stranger, not yourself", body: "Every design decision should ask: would someone who's never met me understand this? The hardest shift is moving from building what you'd use to what others will find on their own.", stat: null, imageQuery: "stranger person city street" },
-    { headline: "Distribution before the second feature", body: "Most builders add features when nobody shows up. The problem almost never is features — it's that nobody knows the thing exists. Build the audience before you build the product.", stat: null, imageQuery: "megaphone announcement crowd" },
-    { headline: "Start today. The bar is lower than you think.", body: "Your messy MVP beats the polished idea you've been sitting on for three months. Post it. Let strangers find the bugs. That's how you learn what's worth fixing.", stat: "One published app teaches you more than ten unfinished ones.", imageQuery: "starting line runner momentum" }
+    { headline: "Most people are off by 10%", body: "Guessing your body fat in the mirror is nearly useless. People consistently underestimate it — especially in the 20-30% range where you can still look 'fine'.", stat: "Visual estimates wrong 70% of the time", imageQuery: "fitness body measurement tape" },
+    { headline: "DEXA: $40, takes 10 minutes", body: "A DEXA scan gives you exact body fat %, visceral fat level, and lean mass per limb. Most sports medicine clinics offer it. One scan beats years of guessing.", stat: null, imageQuery: "body scan medical machine" },
+    { headline: "Same weight, totally different bodies", body: "Two people at 180lbs can have 10 percentage points of body fat between them. The scale tells you almost nothing about what's actually going on.", stat: null, imageQuery: "body composition comparison" },
+    { headline: "Visceral fat is the dangerous kind", body: "The fat you can pinch isn't the problem. Visceral fat wraps around your organs — invisible, but a DEXA scan catches it before it becomes a health issue.", stat: "High visceral fat doubles cardiovascular risk", imageQuery: "heart health anatomy" },
+    { headline: "Muscle masks fat on the scale", body: "If you're building muscle and losing fat at the same time, the scale won't move. Body fat % is the only metric that shows what's actually changing.", stat: null, imageQuery: "gym weightlifting progress" },
+    { headline: "One test beats years of guessing", body: "Search 'DEXA scan near me'. Get a real baseline. Then you know exactly what to fix — instead of optimizing based on how you feel that morning.", stat: null, imageQuery: "medical clinic appointment" }
   ]
 };
 
@@ -821,9 +828,9 @@ function esc(s) {
 }
 
 function tagLabel(i, total) {
-  if (i === 0) return 'Hook';
+  if (i === 0) return null;
   if (i === total - 1) return 'Takeaway';
-  return 'Insight';
+  return null;
 }
 
 function thumbUrl(videoId) {
@@ -1090,12 +1097,13 @@ function renderCard(cardEl, slideData, i, videoId) {
 
   cardEl.style.background = GRADIENTS[i % GRADIENTS.length];
 
+  const tag = tagLabel(i, total);
   cardEl.innerHTML = `
     <div class="card-thumb-layer"><img src="${esc(photo)}" alt="" loading="lazy" /></div>
     <div class="card-content-layer">
       <div class="card-top">
         <span class="slide-counter">${i + 1} / ${total}</span>
-        <span class="slide-tag">${tagLabel(i, total)}</span>
+        ${tag ? `<span class="slide-tag">${tag}</span>` : ''}
       </div>
       <div class="card-mid">
         <h2 class="card-headline">${esc(s.headline)}</h2>
@@ -1321,16 +1329,18 @@ async function renderSlideToCanvas(slide, i, total, thumbImg) {
   ctx.fillStyle = 'rgba(255,255,255,0.42)';
   ctx.fillText(`${i+1} / ${total}`, pad, pad + 18);
 
-  // ── Tag pill (top right)
-  const tag = i === 0 ? 'HOOK' : i === total-1 ? 'TAKEAWAY' : 'INSIGHT';
-  ctx.font = 'bold 22px Arial, sans-serif';
-  const tagW = ctx.measureText(tag).width + 36;
-  const pillH = 38, pillY = pad - 10, pillX = S - pad - tagW;
-  ctx.fillStyle = 'rgba(255,255,255,0.13)';
-  canvasRoundRect(ctx, pillX, pillY, tagW, pillH, 19);
-  ctx.fill();
-  ctx.fillStyle = 'rgba(255,255,255,0.62)';
-  ctx.fillText(tag, pillX + 18, pillY + 25);
+  // ── Tag pill (top right) — skip on slide 1
+  const tag = i === total-1 ? 'TAKEAWAY' : null;
+  if (tag) {
+    ctx.font = 'bold 22px Arial, sans-serif';
+    const tagW = ctx.measureText(tag).width + 36;
+    const pillH = 38, pillY = pad - 10, pillX = S - pad - tagW;
+    ctx.fillStyle = 'rgba(255,255,255,0.13)';
+    canvasRoundRect(ctx, pillX, pillY, tagW, pillH, 19);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.62)';
+    ctx.fillText(tag, pillX + 18, pillY + 25);
+  }
 
   // ── Headline
   let ty = 390;
@@ -1346,12 +1356,12 @@ async function renderSlideToCanvas(slide, i, total, thumbImg) {
 
   // ── Stat block
   if (slide.stat) {
-    ty += 24;
-    ctx.fillStyle = 'rgba(255,255,255,0.32)';
-    ctx.fillRect(pad, ty - 4, 4, 58);
-    ctx.font = 'italic 300 28px Arial, sans-serif';
-    ctx.fillStyle = 'rgba(255,255,255,0.8)';
-    canvasText(ctx, `"${slide.stat}"`, pad + 18, ty, W - 18, 42);
+    ty += 28;
+    ctx.fillStyle = 'rgba(255,255,255,0.48)';
+    ctx.fillRect(pad, ty - 4, 4, 62);
+    ctx.font = 'bold 30px Arial, sans-serif';
+    ctx.fillStyle = '#ffffff';
+    canvasText(ctx, slide.stat, pad + 18, ty, W - 18, 44);
   }
 
   // ── Watermark
@@ -1473,6 +1483,38 @@ async function exportPNG() {
 }
 
 // ══════════════════════════════════════════════════════
+// DEMO PDF EXPORT
+// ══════════════════════════════════════════════════════
+
+async function exportDemoPDF() {
+  const btn = document.getElementById('demoPdfBtn');
+  const orig = btn.innerHTML;
+  btn.innerHTML = '⏳ Building...'; btn.disabled = true;
+
+  try {
+    const jspdfModule = await loadJsPDF();
+    const jsPDF = jspdfModule.jsPDF;
+    const demoSlides = DEMO_DATA.slides;
+    const total = demoSlides.length;
+    const doc = new jsPDF({ unit: 'pt', format: [1080, 1080], compress: true });
+
+    for (let i = 0; i < total; i++) {
+      const canvas = await renderSlideToCanvas(demoSlides[i], i, total, null);
+      const imgData = canvas.toDataURL('image/jpeg', 0.9);
+      if (i > 0) doc.addPage([1080, 1080]);
+      doc.addImage(imgData, 'JPEG', 0, 0, 1080, 1080, undefined, 'FAST');
+    }
+    doc.save('demo-carousel.pdf');
+    btn.innerHTML = '✓ PDF saved!';
+    setTimeout(() => { btn.innerHTML = orig; btn.disabled = false; }, 3000);
+  } catch (err) {
+    btn.innerHTML = orig;
+    btn.disabled = false;
+    alert('Export failed: ' + (err.message || err));
+  }
+}
+
+// ══════════════════════════════════════════════════════
 // DEMO CAROUSEL (landing page)
 // ══════════════════════════════════════════════════════
 
@@ -1492,6 +1534,7 @@ async function exportPNG() {
     const card = document.createElement('div');
     card.className = 'slide-card';
     card.style.background = GRADIENTS[di % GRADIENTS.length];
+    const dTag = tagLabel(di, total);
     card.innerHTML = `
       <div class="card-thumb-layer">
         <img src="https://i.ytimg.com/vi/${DEMO_VIDEO_ID}/hqdefault.jpg" alt="" />
@@ -1499,7 +1542,7 @@ async function exportPNG() {
       <div class="card-content-layer">
         <div class="card-top">
           <span class="slide-counter">${di+1} / ${total}</span>
-          <span class="slide-tag">${tagLabel(di, total)}</span>
+          ${dTag ? `<span class="slide-tag">${dTag}</span>` : ''}
         </div>
         <div class="card-mid">
           <h2 class="card-headline">${esc(s.headline)}</h2>
