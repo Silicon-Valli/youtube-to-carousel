@@ -211,7 +211,7 @@ body {
 .form-card textarea:focus,
 #manualTxt:focus {
   border-color: var(--ink-900);
-  box-shadow: 0 0 0 2px var(--ember-50);
+  box-shadow: 0 0 0 3px rgba(18,17,16,0.06);
 }
 
 .manual-tip {
@@ -238,8 +238,8 @@ body {
 /* Generate button (primary) */
 .btn-generate {
   width: 100%;
-  background: var(--ember-500);
-  color: #fff;
+  background: var(--ink-900);
+  color: var(--bone-50);
   border: none;
   border-radius: var(--r-sm);
   padding: 14px 20px;
@@ -253,13 +253,13 @@ body {
   touch-action: manipulation;
 }
 .btn-generate:hover:not(:disabled) {
-  background: var(--ember-600);
+  background: var(--ink-800);
   transform: translateY(-1px);
   box-shadow: var(--shadow-1);
 }
 .btn-generate:active:not(:disabled) { transform: translateY(0); box-shadow: none; }
 .btn-generate:disabled { background: var(--bone-200); color: var(--ink-400); cursor: not-allowed; }
-.btn-generate:focus-visible { outline: 2px solid var(--ember-500); outline-offset: 2px; }
+.btn-generate:focus-visible { outline: 2px solid var(--ink-900); outline-offset: 2px; }
 
 .form-note {
   font-size: 12px;
@@ -286,7 +286,7 @@ body {
   position: absolute;
   top: 0; left: -35%;
   width: 35%; height: 100%;
-  background: var(--ember-500);
+  background: var(--ink-900);
   animation: shimmer 1.6s var(--ease) infinite;
 }
 @keyframes shimmer { to { left: 100%; } }
@@ -330,10 +330,12 @@ body {
 .li-avatar {
   width: 40px; height: 40px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--ember-500), var(--ember-600));
-  color: #fff;
+  background: linear-gradient(135deg, var(--ink-800), var(--ink-900));
+  color: var(--bone-50);
+  font-family: var(--font-display);
   font-weight: 600;
-  font-size: 14px;
+  font-size: 15px;
+  letter-spacing: -0.01em;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
 }
@@ -430,7 +432,7 @@ body {
   font-family: var(--font-mono);
   font-size: 13px;
   font-weight: 500;
-  color: var(--ember-500);
+  color: var(--ink-400);
   margin-bottom: 12px;
   letter-spacing: 0.02em;
 }
@@ -505,10 +507,11 @@ body {
 .card-thumb-layer img {
   width: 100%; height: 100%;
   object-fit: cover;
-  opacity: 0.12;
+  opacity: 0.32;
   display: block;
+  filter: grayscale(0.25) contrast(1.05);
 }
-.card-thumb-layer.has-custom img { opacity: 1; }
+.card-thumb-layer.has-custom img { opacity: 1; filter: none; }
 
 /* Card content layer */
 .card-content-layer {
@@ -857,7 +860,7 @@ body {
   flex-shrink: 0;
 }
 .swatch:hover { transform: translateY(-1px); }
-.swatch.active { outline: 2px solid var(--ember-500); outline-offset: 2px; }
+.swatch.active { outline: 2px solid var(--ink-900); outline-offset: 2px; }
 
 .edit-bg-label {
   font-size: 11px; font-weight: 600;
@@ -883,7 +886,7 @@ body {
   white-space: nowrap;
   -webkit-tap-highlight-color: transparent;
 }
-.btn-upload-bg:hover { border-color: var(--ember-500); color: var(--ember-500); background: var(--ember-50); }
+.btn-upload-bg:hover { border-color: var(--ink-900); color: var(--ink-900); background: var(--bone-100); }
 .btn-remove-bg {
   display: none;
   background: transparent;
@@ -969,7 +972,7 @@ body {
   min-height: 40px;
 }
 .btn-edit-toggle:hover { color: var(--ink-900); border-color: var(--bone-300); background: var(--bone-100); }
-.btn-edit-toggle.active { color: var(--ember-500); border-color: var(--ember-500); background: var(--ember-50); }
+.btn-edit-toggle.active { color: var(--bone-50); border-color: var(--ink-900); background: var(--ink-900); }
 
 /* ── PROGRESS BAR (export) ── */
 .export-progress {
@@ -982,7 +985,7 @@ body {
 .export-progress.show { display: block; }
 .export-progress-bar {
   height: 100%;
-  background: var(--ember-500);
+  background: var(--ink-900);
   transition: width 200ms var(--ease);
   width: 0%;
 }
@@ -1054,7 +1057,7 @@ body {
   <section class="how-section">
     <div>
       <span class="eyebrow">How it works</span>
-      <h2 class="how-title">Three steps. No account. No fluff.</h2>
+      <h2 class="how-title">From a blank textarea to a post you'd actually publish.</h2>
     </div>
     <div class="step-cards">
       <article class="step-card">
@@ -1190,14 +1193,15 @@ const DEMO_VIDEO_ID = '5K9QhkPww44';
 const DEMO_VIDEO_URL = `https://www.youtube.com/watch?v=${DEMO_VIDEO_ID}`;
 
 const DEMO_DATA = {
-  title: "Most People Guess Their Body Fat Wrong",
+  title: "The Small BIG — Persuasion's Quietest Nudges",
   slides: [
-    { headline: "You're off by 10%", body: "Most people badly underestimate their body fat — especially in the 20-30% range where you can still look 'fine'.", stat: "Visual estimates wrong 70% of the time", imageQuery: "mirror reflection body fitness" },
-    { headline: "DEXA scan: $40, 10 minutes", body: "You get exact body fat %, visceral fat, and lean mass per limb. One scan beats years of guessing.", stat: null, imageQuery: "medical scanner hospital machine" },
-    { headline: "Same weight ≠ same body", body: "Two people at 180lbs can have 10 percentage points of body fat between them. The scale lies.", stat: null, imageQuery: "weighing scale bathroom" },
-    { headline: "Visceral fat is the silent one", body: "It wraps around your organs — you can't pinch it or see it, but a DEXA scan finds it early.", stat: "High visceral fat doubles heart risk", imageQuery: "heart anatomy organ red" },
-    { headline: "Muscle hides fat gain", body: "Building muscle while gaining fat? The scale won't move. Body fat % is the only number that shows what's actually changing.", stat: null, imageQuery: "gym weights barbell training" },
-    { headline: "Search 'DEXA scan near me'", body: "Get one baseline reading. Then you're optimizing based on data — not how you look on a good morning.", stat: null, imageQuery: "clinic appointment doctor health" }
+    { headline: "Tiny shifts. Outsized wins.", body: "Cialdini, Martin, and Goldstein spent decades running the experiments. The lesson: you don't need a better pitch. You need a better edit.", stat: "Switching organ donation from opt‑in to opt‑out lifted rates from 15% to 90%.", imageQuery: "quiet library reading lamp" },
+    { headline: "We copy people like us.", body: "One hotel swapped generic signage for '75% of guests in this exact room reused their towels.' Compliance jumped. Peer identity beats polite guilt.", stat: "Identity‑matched social proof outperformed generic by 33%.", imageQuery: "crowd walking city street morning" },
+    { headline: "Make them say it out loud.", body: "A spoken 'yes' predicts follow‑through far better than a silent nod. Writing it down works almost as well. Commitment needs a witness — even if that witness is a calendar.", stat: null, imageQuery: "vintage typewriter paper desk" },
+    { headline: "Losses sting twice.", body: "Frame the ask as what they'll lose by doing nothing. Gain framing reads like a sales pitch. Loss framing reads like a warning from a friend.", stat: "Loss framing moves decisions roughly 2× more than gain framing.", imageQuery: "empty chair rainy window" },
+    { headline: "Hand them an identity to defend.", body: "'You strike me as the kind of person who follows through.' Now they're not agreeing with you — they're being consistent with themselves. Persuasion becomes self‑persuasion.", stat: null, imageQuery: "mirror reflection portrait shadow" },
+    { headline: "Specific beats round.", body: "Charge $39, not $40. Claim 'reduces errors by 27%,' not 'about 25%.' The odd digits whisper that a real calculation happened behind the claim.", stat: "Precise numbers are remembered 30% more accurately than rounded ones.", imageQuery: "calculator paper pencil numbers" },
+    { headline: "Sequence is half the persuasion.", body: "Ask for the small yes first, then the larger one. Flip the order and both collapse. The Small BIG isn't a single trick — it's a staircase.", stat: null, imageQuery: "spiral staircase architecture moody" }
   ]
 };
 
