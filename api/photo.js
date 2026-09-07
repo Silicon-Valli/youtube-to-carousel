@@ -38,25 +38,38 @@ module.exports = async function handler(req, res) {
     return res.status(200).json(hit.data);
   }
 
-  let r;
-  try {
-    const url = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(q)}&per_page=6&orientation=squarish&content_filter=high`;
-    r = await fetch(url, { headers });
-  } catch (err) {
-    console.error('[photo] fetch error:', err.message);
-    return res.status(502).json({ error: 'Could not reach Unsplash.' });
+  // Unsplash wants every word to match, so a specific 3-word query can come back
+  // empty. Retry with fewer words and any orientation before giving up.
+  const words = q.split(' ');
+  const attempts = [
+    { query: q, squarish: true },
+    { query: words.slice(0, 2).join(' '), squarish: false },
+    { query: words[0], squarish: false },
+  ].filter((a, i, arr) => a.query && arr.findIndex(b => b.query === a.query && b.squarish === a.squarish) === i);
+
+  let results = [];
+  for (const a of attempts) {
+    let r;
+    try {
+      const url = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(a.query)}&per_page=6&content_filter=high${a.squarish ? '&orientation=squarish' : ''}`;
+      r = await fetch(url, { headers });
+    } catch (err) {
+      console.error('[photo] fetch error:', err.message);
+      return res.status(502).json({ error: 'Could not reach Unsplash.' });
+    }
+    if (r.status === 403 || r.status === 429) {
+      return res.status(429).json({ error: 'Photo search limit reached for this hour.' });
+    }
+    if (!r.ok) {
+      console.error('[photo] Unsplash error:', r.status);
+      return res.status(r.status).json({ error: `Unsplash error ${r.status}` });
+    }
+    const data = await r.json();
+    results = data.results || [];
+    if (results.length) break;
   }
 
-  if (r.status === 403 || r.status === 429) {
-    return res.status(429).json({ error: 'Photo search limit reached for this hour.' });
-  }
-  if (!r.ok) {
-    console.error('[photo] Unsplash error:', r.status);
-    return res.status(r.status).json({ error: `Unsplash error ${r.status}` });
-  }
-
-  const data = await r.json();
-  const photos = (data.results || []).map(p => ({
+  const photos = results.map(p => ({
     id: p.id,
     url: p.urls?.regular,                       // 1080px wide, hotlinked
     thumb: p.urls?.small,

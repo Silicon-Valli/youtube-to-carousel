@@ -607,7 +607,7 @@ h2 {
           <img class="bg-preview" id="bgPreview" src="" alt="" />
           <button class="btn btn-secondary btn-sm" id="btnNextPhoto" onclick="nextPhoto()"><svg class="ic ic-sm"><use href="#i-repost"/></svg>Next photo</button>
           <button class="btn btn-secondary btn-sm" onclick="document.getElementById('bgFileInput').click()"><svg class="ic ic-sm"><use href="#i-upload"/></svg>Upload</button>
-          <button class="btn btn-ghost btn-sm" id="btnRemoveBg" onclick="removeBgImage()"><svg class="ic ic-sm"><use href="#i-x"/></svg>Remove</button>
+          <button class="btn btn-ghost btn-sm btn-icon" id="btnRemoveBg" onclick="removeBgImage()" aria-label="Remove photo" title="Remove photo"><svg class="ic"><use href="#i-x"/></svg></button>
         </div>
         <input type="file" id="bgFileInput" accept="image/*" style="display:none" onchange="handleBgUpload(this)" />
         <p class="photo-credit" id="photoCredit"></p>
