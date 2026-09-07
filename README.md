@@ -12,7 +12,7 @@ You have a YouTube transcript, a meeting summary, a news article, or just raw th
 
 ReelSlide closes that gap. Paste your text in, hit generate, and Claude turns it into 6-8 slides: a hook, a few content slides, and a takeaway. Each slide gets a headline, body copy, and an optional stat callout. The whole thing takes about 10 seconds.
 
-Once the slides are out, you can edit any slide inline, swap between four curated gradient presets, upload a custom background image, and control how much of the image shows through. Then export as a PDF you can upload directly to LinkedIn as a native carousel, or grab individual PNGs.
+Once the slides are out, you can edit any slide inline, pick from six gradient presets, upload a custom background image, and control how much of the image shows through. Then export as a PDF you can upload directly to LinkedIn as a native carousel, or grab individual PNGs.
 
 ---
 
@@ -21,8 +21,8 @@ Once the slides are out, you can edit any slide inline, swap between four curate
 1. Paste any text into the input field (YouTube transcript, article, meeting notes, brain dump)
 2. Hit "Generate carousel" — Claude processes it server-side and returns 6-8 structured slides
 3. Flip through the slides in the card preview
-4. Click "Edit slide" on any slide to tweak the headline, body, or stat
-5. Pick one of the four gradient presets (Graphite, Midnight, Oxblood, Pine), or upload your own background image
+4. Edit the headline, body, or stat in the panel next to the slide
+5. Pick one of six gradient presets, or upload your own background image
 6. Use the overlay slider to control how much the image shows through vs the color
 7. Export as PDF (uploads directly to LinkedIn) or PNG (single slide)
 
@@ -83,7 +83,7 @@ If you want to understand what actually makes it work, there are three functions
 
 - Rate limited to 5 generations per IP per day (Claude API costs money)
 - Picsum background images are random seeds, not semantic search. The "swimming" slide might get a photo of a boat
-- Canvas export uses the same Fraunces/Inter/JetBrains Mono stack as the screen, but if the webfonts haven't loaded yet by export time it falls back to system serif/sans
+- Canvas export waits for Inter Tight and Inter to load so the PDF matches the screen; if the webfonts fail, it falls back to the system sans
 - PDF export can be slow on long carousels (8 slides = 8 canvas renders)
 - No way to reorder slides
 - No account system, so edits are lost on refresh
