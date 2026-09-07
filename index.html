@@ -386,8 +386,13 @@ h2 {
 .bg-row { display: flex; align-items: center; gap: 8px; }
 .bg-preview { display: none; width: 34px; height: 34px; border-radius: var(--r); object-fit: cover; border: 1px solid var(--line-2); flex-shrink: 0; }
 .bg-preview.visible { display: block; }
-#btnRemoveBg { display: none; }
-#btnRemoveBg.visible { display: inline-flex; }
+#btnRemoveBg, #btnNextPhoto { display: none; }
+#btnRemoveBg.visible, #btnNextPhoto.visible { display: inline-flex; }
+.bg-row { flex-wrap: wrap; }
+.photo-credit { display: none; margin-top: 8px; font-size: 12px; line-height: 1.5; color: var(--ink-3); }
+.photo-credit.show { display: block; }
+.photo-credit a { color: var(--ink-2); text-decoration: underline; text-underline-offset: 2px; }
+.photo-credit a:hover { color: var(--ink); }
 .range {
   width: 100%; height: 2px; margin: 10px 0 4px;
   -webkit-appearance: none; appearance: none; background: var(--line-2); outline: none; cursor: pointer;
@@ -528,14 +533,14 @@ h2 {
       <p>One HTML file, one serverless function, no database. Fork it, add your Claude API key, and it's yours. Takes about 2 minutes.</p>
       <div class="steal-actions">
         <a class="btn btn-secondary" href="https://github.com/Silicon-Valli/youtube-to-carousel" target="_blank" rel="noopener"><svg class="ic"><use href="#i-github"/></svg>GitHub</a>
-        <a class="btn btn-secondary" href="https://vercel.com/new/clone?repository-url=https://github.com/Silicon-Valli/youtube-to-carousel&env=ANTHROPIC_API_KEY&envDescription=Your%20Anthropic%20API%20key&envLink=https://console.anthropic.com" target="_blank" rel="noopener">Deploy to Vercel<svg class="ic"><use href="#i-arrow-up-right"/></svg></a>
+        <a class="btn btn-secondary" href="https://vercel.com/new/clone?repository-url=https://github.com/Silicon-Valli/youtube-to-carousel&env=ANTHROPIC_API_KEY,UNSPLASH_ACCESS_KEY&envDescription=Anthropic%20API%20key%20(console.anthropic.com)%20and%20Unsplash%20Access%20Key%20(unsplash.com/developers)&envLink=https://github.com/Silicon-Valli/youtube-to-carousel%23how-to-steal-it" target="_blank" rel="noopener">Deploy to Vercel<svg class="ic"><use href="#i-arrow-up-right"/></svg></a>
       </div>
     </section>
   </main>
 
   <footer class="foot">
     <span>Built by <a href="https://x.com/siliconvalli" target="_blank" rel="noopener">@siliconvalli</a></span>
-    <span>Made with Claude</span>
+    <span>Made with Claude. Photos from <a href="https://unsplash.com/?utm_source=reelslide&utm_medium=referral" target="_blank" rel="noopener">Unsplash</a></span>
   </footer>
 
 </div>
@@ -600,10 +605,12 @@ h2 {
         <div class="group-label">Background image</div>
         <div class="bg-row">
           <img class="bg-preview" id="bgPreview" src="" alt="" />
+          <button class="btn btn-secondary btn-sm" id="btnNextPhoto" onclick="nextPhoto()"><svg class="ic ic-sm"><use href="#i-repost"/></svg>Next photo</button>
           <button class="btn btn-secondary btn-sm" onclick="document.getElementById('bgFileInput').click()"><svg class="ic ic-sm"><use href="#i-upload"/></svg>Upload</button>
           <button class="btn btn-ghost btn-sm" id="btnRemoveBg" onclick="removeBgImage()"><svg class="ic ic-sm"><use href="#i-x"/></svg>Remove</button>
         </div>
         <input type="file" id="bgFileInput" accept="image/*" style="display:none" onchange="handleBgUpload(this)" />
+        <p class="photo-credit" id="photoCredit"></p>
       </div>
 
       <div class="group">
@@ -777,17 +784,33 @@ function slideGradientIdx(s, i) {
   return s.gradientIdx !== undefined ? s.gradientIdx : i % GRADIENTS.length;
 }
 
+// Which Unsplash photo is showing on a slide, if any
+function currentPhoto(s) {
+  if (s.customBg || !Array.isArray(s.photos)) return null;
+  const k = s.photoIdx === undefined ? 0 : s.photoIdx;
+  return k >= 0 ? s.photos[k] || null : null;
+}
+
+// Background image source for a slide:
+//   custom upload > matched Unsplash photo > (photo search unavailable) random Picsum > none
+function slideBg(s, i) {
+  if (s.customBg) return s.customBg;
+  if (Array.isArray(s.photos)) return currentPhoto(s)?.url || null;
+  if (s.photos === null) return slidePhotoUrl(s, i);
+  return null; // still searching
+}
+
 function renderCard(cardEl, slideData, i, animate = false) {
   const s = slideData[i];
   const total = slideData.length;
   const gradIdx = slideGradientIdx(s, i);
   const overlayVal = s.overlayOpacity !== undefined ? s.overlayOpacity : DEFAULT_OVERLAY;
-  const bgSrc = s.customBg || esc(slidePhotoUrl(s, i));
+  const bgSrc = slideBg(s, i);
   const thumbClass = s.customBg ? 'card-thumb-layer has-custom' : 'card-thumb-layer';
 
   cardEl.style.background = GRADIENT_PAIRS[gradIdx][0];
   cardEl.innerHTML = `
-    <div class="${thumbClass}"><img src="${bgSrc}" alt="" loading="lazy" onerror="this.style.opacity='0'" /></div>
+    <div class="${thumbClass}">${bgSrc ? `<img src="${esc(bgSrc)}" alt="" loading="lazy" onerror="this.style.opacity='0'" />` : ''}</div>
     <div class="card-overlay" style="background:${GRADIENTS[gradIdx]};opacity:${overlayVal}"></div>
     <div class="card-content-layer${animate ? ' enter' : ''}">
       <div class="card-top">${i + 1} / ${total}</div>
@@ -843,6 +866,57 @@ function showResults(data) {
   document.getElementById('landing-page').style.display = 'none';
   document.getElementById('results-page').style.display = 'block';
   window.scrollTo(0, 0);
+  resolvePhotos(slides);
+}
+
+// ══════════════════════════════════════════════════════
+// PHOTO SEARCH (Unsplash via /api/photo)
+// ══════════════════════════════════════════════════════
+
+async function fetchPhotos(query) {
+  const res = await fetchTimeout(`/api/photo?q=${encodeURIComponent(query)}`, 12000);
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    const err = new Error(data.error || `Photo search error ${res.status}`);
+    err.status = res.status;
+    throw err;
+  }
+  const data = await res.json();
+  return Array.isArray(data.photos) ? data.photos : [];
+}
+
+// Look up one matching photo set per slide, in parallel. Slides render as soon as
+// their photo arrives. If search is unavailable, the slide falls back to a stand-in.
+function resolvePhotos(list) {
+  list.forEach(async (s) => {
+    if (s.photos !== undefined) return;
+    const query = (s.imageQuery || s.headline || '').trim();
+    try {
+      s.photos = query ? await fetchPhotos(query) : [];
+      s.photoIdx = 0;
+    } catch (err) {
+      s.photos = null;
+      s.photoError = err.status === 429 ? 'limit' : 'unavailable';
+    }
+    if (list === slides && slides[idx] === s) { syncUI(); populateEditPanel(); }
+  });
+}
+
+function nextPhoto() {
+  const s = slides[idx];
+  if (!s || !Array.isArray(s.photos) || !s.photos.length) return;
+  const k = s.photoIdx === undefined ? 0 : s.photoIdx;
+  s.photoIdx = (k + 1) % s.photos.length;
+  syncUI();
+  populateEditPanel();
+}
+
+// Unsplash asks apps to report a download when a photo is actually used
+function trackPhotoDownloads(list) {
+  list.forEach(s => {
+    const p = currentPhoto(s);
+    if (p?.id) fetch(`/api/photo?track=${encodeURIComponent(p.id)}`).catch(() => {});
+  });
 }
 
 function goBack() {
@@ -974,9 +1048,8 @@ async function renderSlideToCanvas(slide, i, total) {
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, S, S);
 
-  const bgImg = slide.customBg
-    ? await loadImage(slide.customBg, false)
-    : await loadImage(slidePhotoUrl(slide, i), true);
+  const bgSrc = slideBg(slide, i);
+  const bgImg = bgSrc ? await loadImage(bgSrc, !bgSrc.startsWith('data:')) : null;
 
   if (bgImg) {
     const ar = bgImg.width / bgImg.height;
@@ -1095,6 +1168,7 @@ async function exportPDF() {
     const rawTitle = document.getElementById('resultsTitle').textContent;
     const safeTitle = rawTitle.replace(/[^a-zA-Z0-9\s-]/g, '').trim().slice(0, 40) || 'carousel';
     await buildPdf(slides, `${safeTitle}.pdf`);
+    trackPhotoDownloads(slides);
     btn.innerHTML = orig; btn.disabled = false;
     flashBtn('pdfBtn', ICON('i-check') + '<span class="label">PDF saved</span>', 2500);
   } catch (err) {
@@ -1114,6 +1188,7 @@ async function exportPNG() {
     link.download = `slide-${idx + 1}.png`;
     link.href = canvas.toDataURL('image/png');
     link.click();
+    trackPhotoDownloads([slides[idx]]);
     btn.innerHTML = orig; btn.disabled = false;
     flashBtn('pngBtn', ICON('i-check') + '<span class="label">Saved</span>', 2000);
   } catch (err) {
@@ -1169,10 +1244,26 @@ function populateEditPanel() {
 
   const preview = document.getElementById('bgPreview');
   const removeBtn = document.getElementById('btnRemoveBg');
-  preview.src = s.customBg || '';
-  preview.classList.toggle('visible', !!s.customBg);
-  removeBtn.classList.toggle('visible', !!s.customBg);
+  const nextBtn = document.getElementById('btnNextPhoto');
+  const credit = document.getElementById('photoCredit');
+  const photo = currentPhoto(s);
+  const hasPhotoSet = Array.isArray(s.photos) && s.photos.length > 0;
+
+  preview.src = s.customBg || photo?.thumb || '';
+  preview.classList.toggle('visible', !!(s.customBg || photo));
+  removeBtn.classList.toggle('visible', !!(s.customBg || photo));
+  nextBtn.classList.toggle('visible', !s.customBg && hasPhotoSet && (s.photos.length > 1 || !photo));
   document.getElementById('bgFileInput').value = '';
+
+  let creditHtml = '';
+  if (s.customBg) creditHtml = 'Your upload.';
+  else if (photo) creditHtml = `Photo by <a href="${esc(photo.profile)}" target="_blank" rel="noopener">${esc(photo.name)}</a> on <a href="${esc(photo.link)}" target="_blank" rel="noopener">Unsplash</a>`;
+  else if (s.photos === undefined) creditHtml = 'Finding a photo';
+  else if (s.photos === null) creditHtml = s.photoError === 'limit' ? 'Photo search is busy this hour. Showing a stand-in.' : 'Photo search unavailable. Showing a stand-in.';
+  else if (hasPhotoSet) creditHtml = 'No photo. Press Next photo to bring one back.';
+  else creditHtml = 'No matching photo found. Upload one if you like.';
+  credit.innerHTML = creditHtml;
+  credit.classList.toggle('show', !!creditHtml);
 
   const pct = Math.round((s.overlayOpacity !== undefined ? s.overlayOpacity : DEFAULT_OVERLAY) * 100);
   document.getElementById('overlaySlider').value = pct;
@@ -1204,8 +1295,10 @@ function handleBgUpload(input) {
 }
 
 function removeBgImage() {
-  if (!slides[idx]) return;
-  delete slides[idx].customBg;
+  const s = slides[idx];
+  if (!s) return;
+  if (s.customBg) delete s.customBg;         // back to the matched photo
+  else if (currentPhoto(s)) s.photoIdx = -1;  // plain gradient
   syncUI();
   populateEditPanel();
 }
@@ -1222,6 +1315,8 @@ function updateOverlay(value) {
 // ══════════════════════════════════════════════════════
 
 (function initDemo() {
+  // Demo slides use stand-in photos (no search calls on page load).
+  DEMO_DATA.slides.forEach(s => { if (s.photos === undefined) s.photos = null; });
   const card = document.getElementById('demoCard');
   const prev = document.getElementById('demoPrev');
   const next = document.getElementById('demoNext');

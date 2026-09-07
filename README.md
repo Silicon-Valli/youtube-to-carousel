@@ -34,10 +34,11 @@ Once the slides are out, you can edit any slide inline, pick from six gradient p
 youtube-to-carousel/
 ├── index.html        # the entire frontend
 └── api/
-    └── generate.js   # the entire backend
+    ├── generate.js   # text in, slides out (Claude)
+    └── photo.js      # slide topic in, matching photo out (Unsplash)
 ```
 
-That's it. One HTML file, one serverless function. No framework, no build step, no node_modules to commit. The frontend is vanilla JS with inline CSS. The backend is a Vercel serverless function that calls the Claude API.
+That's it. One HTML file, two small serverless functions. No framework, no build step, no node_modules to commit. The frontend is vanilla JS with inline CSS. The backend calls Claude for the words and Unsplash for the pictures.
 
 It's this simple because it doesn't need to be anything else. There's no database, no auth, no state that persists between sessions. Everything lives in memory while you're using it and disappears when you close the tab.
 
@@ -47,9 +48,14 @@ It's this simple because it doesn't need to be anything else. There's no databas
 
 ### No terminal? One click.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Silicon-Valli/youtube-to-carousel&env=ANTHROPIC_API_KEY&envDescription=Your%20Anthropic%20API%20key%20from%20console.anthropic.com&envLink=https://console.anthropic.com)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Silicon-Valli/youtube-to-carousel&env=ANTHROPIC_API_KEY,UNSPLASH_ACCESS_KEY&envDescription=Anthropic%20API%20key%20(console.anthropic.com)%20and%20Unsplash%20Access%20Key%20(unsplash.com/developers)&envLink=https://github.com/Silicon-Valli/youtube-to-carousel%23how-to-steal-it)
 
-Click the button, sign into Vercel with GitHub, paste your Anthropic API key when it asks, and you're live. Takes about 2 minutes. Get your API key at [console.anthropic.com](https://console.anthropic.com) — it's free to start.
+Click the button, sign into Vercel with GitHub, paste two keys when it asks, and you're live. Takes about 3 minutes.
+
+- `ANTHROPIC_API_KEY` from [console.anthropic.com](https://console.anthropic.com). Pay as you go, a carousel costs well under a cent.
+- `UNSPLASH_ACCESS_KEY` from [unsplash.com/developers](https://unsplash.com/developers). Create an app, copy the Access Key (not the Secret). Free. Demo apps get 50 photo searches an hour, which is about 7 carousels; apply for production in the same dashboard to raise it to 5,000.
+
+Skip the Unsplash key and the app still works, slides just get a random stand-in photo instead of a matching one.
 
 ### Or do it in the terminal
 
@@ -61,28 +67,32 @@ cd youtube-to-carousel
 # Deploy to Vercel
 vercel
 
-# Set your API key
+# Set your keys
 vercel env add ANTHROPIC_API_KEY
+vercel env add UNSPLASH_ACCESS_KEY
 ```
 
-That's the whole setup. Vercel detects the `api/` folder automatically and deploys `generate.js` as a serverless function.
+That's the whole setup. Vercel detects the `api/` folder automatically and deploys both files in it as serverless functions.
 
 ### Rebuild from scratch
 
-If you want to understand what actually makes it work, there are three functions worth reading:
+If you want to understand what actually makes it work, there are four functions worth reading:
 
 **`generate.js`** is the brain. It takes raw text, sends it to `claude-sonnet-4-6` with a prompt that asks for 6-8 slides in a specific JSON shape (headline, body, stat, imageQuery), and returns that JSON. The prompt does most of the heavy lifting: it tells Claude to write like a person explaining something over coffee, to lead with numbers when they exist, and to keep headlines under 6 words.
 
+**`photo.js`** turns Claude's `imageQuery` for each slide ("handshake office deal") into a real photo. It searches Unsplash server-side so the key never reaches the browser, returns 6 candidates so "Next photo" costs nothing, caches results for an hour, and reports a download to Unsplash when a slide is exported (their API rules ask for that).
+
 **`renderCard()`** is what turns a slide object into something you can see. It reads the gradient index, checks for a custom background image, calculates an overlay opacity, and builds the card HTML. Every visual tweak you make in the edit panel flows back through here.
 
-**`renderSlideToCanvas()`** is the export engine. It redraws each slide onto a 1080x1080 canvas using the Canvas API, loads the Picsum background image with CORS, applies the gradient overlay, and lays out text manually with word-wrap logic. jsPDF then stitches the canvases into a single PDF. This is the part that breaks most often when you change something upstream.
+**`renderSlideToCanvas()`** is the export engine. It redraws each slide onto a 1080x1080 canvas using the Canvas API, loads the background photo with CORS, applies the gradient overlay, and lays out text manually with word-wrap logic. jsPDF then stitches the canvases into a single PDF. This is the part that breaks most often when you change something upstream.
 
 ---
 
 ## Known limitations
 
 - Rate limited to 5 generations per IP per day (Claude API costs money)
-- Picsum background images are random seeds, not semantic search. The "swimming" slide might get a photo of a boat
+- Photo matching is only as good as the 2-3 words Claude picks per slide. Abstract slides ("mindset") get abstract photos. "Next photo" cycles through 6 options; Upload takes over from there
+- Without an Unsplash production approval, photo search caps at 50 an hour across all users. After that, slides get a random stand-in until the hour resets
 - Canvas export waits for Inter Tight and Inter to load so the PDF matches the screen; if the webfonts fail, it falls back to the system sans
 - PDF export can be slow on long carousels (8 slides = 8 canvas renders)
 - No way to reorder slides
