@@ -314,10 +314,12 @@ h2 {
 .app-title { flex: 1; min-width: 0; font-size: 14px; font-weight: 500; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 6px; }
 .app-actions { display: flex; align-items: center; gap: 6px; }
 @media (max-width: 640px) {
-  .app-actions .label { display: none; }
-  .app-actions .btn { padding: 0 10px; }
+  .app-bar .label { display: none; }
+  .app-bar .btn { padding: 0 10px; }
   .app-actions .btn-primary .label { display: inline; }
+  .app-actions .btn-primary { padding: 0 14px; }
 }
+.inspector { min-width: 0; }
 .export-progress { position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; pointer-events: none; }
 .export-progress-bar { height: 100%; width: 0; background: var(--hi); transition: width 200ms var(--ease); }
 .app-msg { display: none; padding: 10px 16px; font-size: 13px; color: var(--danger); background: var(--surface); border-bottom: 1px solid var(--line); }
@@ -327,6 +329,7 @@ h2 {
 @media (max-width: 1023px) { .app-body { grid-template-columns: 1fr; min-height: 0; } }
 
 .stage {
+  min-width: 0;
   background: var(--paper-2);
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 18px; padding: 40px 32px;
@@ -334,8 +337,9 @@ h2 {
 @media (max-width: 640px) { .stage { padding: 24px 16px; } }
 .stage-nav { display: flex; align-items: center; gap: 6px; }
 .stage-count { min-width: 56px; text-align: center; font-size: 13px; font-weight: 500; color: var(--ink-2); font-variant-numeric: tabular-nums; }
-.strip { display: flex; gap: 8px; max-width: 100%; overflow-x: auto; padding: 4px; scrollbar-width: none; }
+.strip { width: 100%; overflow-x: auto; scrollbar-width: none; }
 .strip::-webkit-scrollbar { display: none; }
+.strip-inner { display: flex; gap: 8px; width: max-content; margin: 0 auto; padding: 4px; }
 .thumb {
   width: 48px; height: 48px; flex-shrink: 0;
   border: none; border-radius: var(--r); cursor: pointer;
@@ -565,7 +569,7 @@ h2 {
         <span class="stage-count" id="navIndicator">1 / 7</span>
         <button class="btn btn-secondary btn-icon" id="nextBtn" onclick="navNext()" aria-label="Next slide"><svg class="ic"><use href="#i-caret-right"/></svg></button>
       </div>
-      <div class="strip" id="slideStrip" role="tablist" aria-label="Slides"></div>
+      <div class="strip"><div class="strip-inner" id="slideStrip" role="tablist" aria-label="Slides"></div></div>
     </section>
 
     <aside class="inspector" aria-label="Edit slide">
